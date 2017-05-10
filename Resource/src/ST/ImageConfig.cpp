@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include "Projections.hpp"
+
 void ST::loadImageConfigs(const std::string & basePath, const std::string & fileName, std::vector<ImageConfig>& images) {
 
 	const std::string fullPath = basePath + fileName;
@@ -62,7 +64,8 @@ void ST::loadImageConfigs(const std::string & basePath, const std::string & file
 
 
 			// read image
-			images[currentImageIndex++].load(basePath + imageFileName);
+			// KAOCC: focal length is wrong !
+			images[currentImageIndex++].load(basePath + imageFileName, 1000);
 
 			if (currentImageIndex == numOfImages) {
 				break;
@@ -76,19 +79,20 @@ void ST::loadImageConfigs(const std::string & basePath, const std::string & file
 
 }
 
-void ST::ImageConfig::load(const std::string fileName) {
+void ST::ImageConfig::load(const std::string fileName, double focalLength) {
 
 	// original
 	mOriginalImage = cv::imread(fileName);
 
 	// scaled images
-	mScaledImages[0];
-
+	mScaledImages[0] = cylinderProjection(mOriginalImage, focalLength, true);
 	for (size_t i = 1; i < kScaleSize; ++i) {
 
-		mScaledImages[i] = cv::Mat(mScaledImages[i - 1].size().width / 2, mScaledImages[i - 1].size().height/ 2, CV_8U);
-
-
+		//mScaledImages[i] = cv::Mat(mScaledImages[i - 1].size().width / 2, mScaledImages[i - 1].size().height/ 2, CV_8U);
+		cv::resize(mScaledImages[i - 1], mScaledImages[i], cv::Size(mScaledImages[i - 1].size().width / 2, mScaledImages[i - 1].size().height / 2));
+		//cv::imshow("proj", mScaledImages[i - 1]);
+		//cv::imshow("orig", mScaledImages[i]);
+		//cv::waitKey(0);
 	}
 
 }

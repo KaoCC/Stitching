@@ -18,7 +18,7 @@ namespace ST {
 
 		static const size_t kScaleSize = 5;
 
-		void load(const std::string fileName);
+		void load(const std::string fileName, double focalLength);
 		std::vector<KeyPoint> computeKeyPoints();
 
 		cv::Mat& getOriginalImage();
