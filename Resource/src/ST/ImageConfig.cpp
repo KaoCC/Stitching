@@ -8,95 +8,107 @@
 
 #include "Projections.hpp"
 
-void ST::loadImageConfigs(const std::string & basePath, const std::string & fileName, std::vector<ImageConfig>& images) {
+namespace ST {
 
-	const std::string fullPath = basePath + fileName;
+	void loadImageConfigs(const std::string & basePath, const std::string & fileName, std::vector<ImageConfig>& images) {
 
-	std::ifstream inputStream(fullPath);
+		const std::string fullPath = basePath + fileName;
 
-	if (!inputStream) {
-		throw std::runtime_error("Could not open file: " + fullPath);
-	}
+		std::ifstream inputStream(fullPath);
 
-	std::string lineString;
-
-
-	bool numFlag = false;
-
-	std::size_t numOfImages = 0;
-	std::size_t currentImageIndex = 0;
-
-	while (std::getline(inputStream, lineString)) {
-
-		std::stringstream lineSplitter(lineString);
-		char token;
-
-		lineSplitter >> token;
-		if ((!lineSplitter) || token == '#') {
-			continue;
-		} else {
-			lineSplitter.putback(token);
+		if (!inputStream) {
+			throw std::runtime_error("Could not open file: " + fullPath);
 		}
 
+		std::string lineString;
 
 
-		if (!numFlag) {
+		bool numFlag = false;
 
-			std::size_t num = 0;
-			lineSplitter >> num;
+		std::size_t numOfImages = 0;
+		std::size_t currentImageIndex = 0;
 
-			// first number
-			numOfImages = num;
-			std::cout << "Number of image: " << numOfImages << '\n';
-			numFlag = true;
+		while (std::getline(inputStream, lineString)) {
 
-			images.resize(numOfImages);
+			std::stringstream lineSplitter(lineString);
+			char token;
 
-
-		} else {
-
-			std::string imageFileName;
-
-
-			lineSplitter >> imageFileName; // >> invShutterSpeed;
-
-			std::cout << "file: " << imageFileName << std::endl;
-
-
-			// read image
-			// KAOCC: focal length is wrong !
-			images[currentImageIndex++].load(basePath + imageFileName, 1000);
-
-			if (currentImageIndex == numOfImages) {
-				break;
+			lineSplitter >> token;
+			if ((!lineSplitter) || token == '#') {
+				continue;
+			} else {
+				lineSplitter.putback(token);
 			}
 
+
+
+			if (!numFlag) {
+
+				std::size_t num = 0;
+				lineSplitter >> num;
+
+				// first number
+				numOfImages = num;
+				std::cout << "Number of image: " << numOfImages << '\n';
+				numFlag = true;
+
+				images.resize(numOfImages);
+
+
+			} else {
+
+				std::string imageFileName;
+
+
+				lineSplitter >> imageFileName; // >> invShutterSpeed;
+
+				std::cout << "file: " << imageFileName << std::endl;
+
+
+				// read image
+				// KAOCC: focal length is wrong !
+				images[currentImageIndex++].load(basePath + imageFileName, 1000);
+
+				if (currentImageIndex == numOfImages) {
+					break;
+				}
+
+			}
+
+
 		}
 
 
 	}
 
+	void ImageConfig::load(const std::string fileName, double focalLength) {
 
-}
+		// original
+		mOriginalImage = cv::imread(fileName);
 
-void ST::ImageConfig::load(const std::string fileName, double focalLength) {
+		// scaled images
+		mScaledImages[0] = cylinderProjection(mOriginalImage, focalLength, true);
+		for (size_t i = 1; i < kScaleSize; ++i) {
 
-	// original
-	mOriginalImage = cv::imread(fileName);
+			//mScaledImages[i] = cv::Mat(mScaledImages[i - 1].size().width / 2, mScaledImages[i - 1].size().height/ 2, CV_8U);
+			cv::resize(mScaledImages[i - 1], mScaledImages[i], cv::Size(mScaledImages[i - 1].size().width / 2, mScaledImages[i - 1].size().height / 2));
+			//cv::imshow("proj", mScaledImages[i - 1]);
+			//cv::imshow("orig", mScaledImages[i]);
+			//cv::waitKey(0);
+		}
 
-	// scaled images
-	mScaledImages[0] = cylinderProjection(mOriginalImage, focalLength, true);
-	for (size_t i = 1; i < kScaleSize; ++i) {
-
-		//mScaledImages[i] = cv::Mat(mScaledImages[i - 1].size().width / 2, mScaledImages[i - 1].size().height/ 2, CV_8U);
-		cv::resize(mScaledImages[i - 1], mScaledImages[i], cv::Size(mScaledImages[i - 1].size().width / 2, mScaledImages[i - 1].size().height / 2));
-		//cv::imshow("proj", mScaledImages[i - 1]);
-		//cv::imshow("orig", mScaledImages[i]);
-		//cv::waitKey(0);
 	}
 
-}
+	std::vector<KeyPoint> ImageConfig::computeKeyPoints() {
 
-cv::Mat & ST::ImageConfig::getOriginalImage() {
-	return mOriginalImage;
+		// yet to be done
+
+		return std::vector<KeyPoint>();
+	}
+
+	cv::Mat & ImageConfig::getOriginalImage() {
+		return mOriginalImage;
+	}
+
+
 }
