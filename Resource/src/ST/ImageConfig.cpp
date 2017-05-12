@@ -8,7 +8,22 @@
 
 #include "Projections.hpp"
 
+#include "KeyPoint.hpp"
+
 namespace ST {
+
+
+	// 0: x, 1: y
+	static void computeGradient(const cv::Mat& inputImage, std::array<cv::Mat, 2>& gradients) {
+
+		cv::Mat& Dx = gradients[0];
+		cv::Sobel(inputImage, Dx, CV_64F, 1, 0, 3);
+
+		cv::Mat& Dy = gradients[1];
+		cv::Sobel(inputImage, Dy, CV_64F, 0, 1, 3);
+
+	}
+
 
 	void loadImageConfigs(const std::string & basePath, const std::string & fileName, std::vector<ImageConfig>& images) {
 
@@ -103,11 +118,138 @@ namespace ST {
 
 		// yet to be done
 
-		return std::vector<KeyPoint>();
+		std::vector<KeyPoint> keyPoints;
+
+		for (size_t index = 0; index < kScaleSize; ++index) {
+
+
+
+			// .... lots of stuff here
+
+			// Compute x and y derivatives of image
+
+			//Gx, Gy
+			std::array<cv::Mat, 2> G;
+			computeGradient(mScaledImages[index], G);
+
+			//cv::imshow("G", G[1]);
+			//cv::waitKey(0);
+
+			// Ixx, Ixy, Iyy
+			std::array<cv::Mat, 3> I { cv::Mat(mScaledImages[index].size(), CV_64F), cv::Mat(mScaledImages[index].size(), CV_64F), cv::Mat(mScaledImages[index].size(), CV_64F) };
+			auto& Ixx = I[0];
+			auto& Ixy = I[1];
+			auto& Iyy = I[2];
+
+			for (int y = 0; y < mScaledImages[index].size().height; ++y) {
+				for (int x = 0; x < mScaledImages[index].size().width; ++x) {
+
+					auto& ix = G[0].at<double>(y, x);
+					auto& iy = G[1].at<double>(y, x);
+
+					Ixx.at<double>(y, x) = ix * ix;
+					Ixy.at<double>(y, x) = ix * iy;
+					Iyy.at<double>(y, x) = iy * iy;
+				}
+			}
+
+
+			std::array<cv::Mat, 3> H { cv::Mat(mScaledImages[index].size(), CV_64F),  cv::Mat(mScaledImages[index].size(), CV_64F), cv::Mat(mScaledImages[index].size(), CV_64F) };
+
+			// compute Gaussian
+			for (size_t idx = 0; idx < H.size(); ++idx) {
+				cv::GaussianBlur(I[idx], H[idx], cv::Size(0, 0), 1.5);
+			}
+
+
+			//cv::imshow("H", H[0]);
+			//cv::waitKey(0);
+
+			mFHM[index] = cv::Mat(mScaledImages[index].size(), CV_64F);
+
+			for (int y = 0; y < mScaledImages[index].size().height; ++y) {
+				for (int x = 0; x < mScaledImages[index].size().width; ++x) {
+
+					double det = H[0].at<double>(y, x) * H[2].at<double>(y, x) - H[1].at<double>(y, x) * H[1].at<double>(y, x);
+					double trace = H[0].at<double>(y, x) + H[2].at<double>(y, x);
+
+					mFHM[index].at<double>(y, x) = det / (trace + 0.0001);		// tmp
+
+				}
+			}
+
+			//cv::imshow("mFHM", mFHM[index]);
+			//cv::waitKey(0);
+
+			// Pick local maxima of 3x3 and larger than 10
+			for (int y = 0; y < mFHM[index].size().height; ++y) {
+				for (int x = 0; x < mFHM[index].size().width; ++x) {
+
+					if (mFHM[index].at<double>(y, x) < 10) {
+						continue;
+					}
+
+
+					// find local max
+					bool maxFlag = true;
+					for (int dy = -1; dy < 1; ++dy) {
+						for (int dx = -1; dx < 1;  ++dx) {
+
+							// check the boundary
+							if ((dy == 0 && dx == 0) || (x + dx == mFHM[index].size().width) || (x + dx < 0)  || (y + dy == mFHM[index].size().height) || (y + dy < 0) ) {
+								continue;
+							}
+
+							// not the local max ...
+							if (mFHM[index].at<double>(y  + dy, x + dx) > mFHM[index].at<double>(y, x)) {
+								maxFlag = false;
+								break;
+							}
+
+						}
+					}
+
+					if (maxFlag) {
+						keyPoints.push_back(KeyPoint(x, y, std::atan2(G[1].at<double>(y, x), G[0].at<double>(y, x)), mFHM[index].at<double>(y, x), index));
+					}
+
+				}
+			}
+
+
+		}
+
+		//std::cerr << keyPoints.size() << std::endl;
+
+		testKeyPoints(keyPoints);
+
+		return keyPoints;
 	}
 
 	cv::Mat & ImageConfig::getOriginalImage() {
 		return mOriginalImage;
+	}
+
+
+
+
+	// test
+	void ImageConfig::testKeyPoints(const std::vector<KeyPoint>& keyPoints) {
+
+		//cv::Mat result(cv::Size(mScaledImages[0].size()), CV_8UC3);
+
+		cv::Mat result = cylinderProjection(mOriginalImage, 1000, false);
+
+		//cv::cvtColor(mScaledImages[0], result, cv::COLOR_GRAY2BGR);
+
+		for (int i = 0; i < keyPoints.size(); ++i) {
+			int radius = 16 >> (4 - keyPoints[i].getScale());
+			cv::circle(result, cvPoint(keyPoints[i].getX() * radius, keyPoints[i].getY() * radius), radius * 4, CV_RGB(255, 0, 0));
+		}
+
+
+		cv::imshow("result", result);
+		cv::waitKey(0);
 	}
 
 

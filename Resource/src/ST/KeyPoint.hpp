@@ -14,6 +14,19 @@ namespace ST {
 
 		KeyPoint(double x, double y, double angle, double val, std::size_t s);
 
+		double getX() const {
+			return mPt.first;
+		}
+
+		double getY() const {
+			return mPt.second;
+		}
+
+
+		std::size_t getScale() const {
+			return mS;
+		}
+
 	private:
 
 		// coordinates: (x, y)
@@ -28,6 +41,7 @@ namespace ST {
 
 		Descriptor* mDescriptor;
 		std::array<double, 3> mWaveletArray;
+
 
 	};
 

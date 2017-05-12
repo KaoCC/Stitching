@@ -23,6 +23,9 @@ namespace ST {
 
 		cv::Mat& getOriginalImage();
 
+		// test
+		void testKeyPoints(const std::vector<KeyPoint>& keyPoints);
+
 	private:
 		cv::Mat mOriginalImage;
 		std::array<cv::Mat, kScaleSize> mScaledImages;
