@@ -10,6 +10,13 @@
 
 #include "KeyPoint.hpp"
 
+// tmp
+static const double kGSigP = 4.0;
+static const double kGSigD = 1.0;
+static const double kGSigI = 1.5;
+static const double kGSigO = 4.5;
+
+
 namespace ST {
 
 
@@ -107,6 +114,9 @@ namespace ST {
 
 			//mScaledImages[i] = cv::Mat(mScaledImages[i - 1].size().width / 2, mScaledImages[i - 1].size().height/ 2, CV_8U);
 			cv::resize(mScaledImages[i - 1], mScaledImages[i], cv::Size(mScaledImages[i - 1].size().width / 2, mScaledImages[i - 1].size().height / 2));
+
+			cv::GaussianBlur(mScaledImages[i - 1], mScaledImages[i - 1], cv::Size(0, 0), kGSigP);
+
 			//cv::imshow("proj", mScaledImages[i - 1]);
 			//cv::imshow("orig", mScaledImages[i]);
 			//cv::waitKey(0);
@@ -135,10 +145,10 @@ namespace ST {
 			//cv::imshow("G", G[1]);
 			//cv::waitKey(0);
 
-			// Gaussian
+			// Gaussian: x, y
 			std::array<cv::Mat, 2> Gg;
 			for (size_t idx = 0; idx < G.size(); ++idx) {
-				cv::GaussianBlur(G[idx], Gg[idx], cv::Size(0, 0), 1.0);
+				cv::GaussianBlur(G[idx], Gg[idx], cv::Size(0, 0), kGSigD);
 			}
 
 			// Ixx, Ixy, Iyy
@@ -163,7 +173,7 @@ namespace ST {
 
 			// compute Gaussian
 			for (size_t idx = 0; idx < H.size(); ++idx) {
-				cv::GaussianBlur(I[idx], H[idx], cv::Size(0, 0), 1.5);
+				cv::GaussianBlur(I[idx], H[idx], cv::Size(0, 0), kGSigI);
 			}
 
 
@@ -186,10 +196,10 @@ namespace ST {
 			//cv::imshow("mFHM", mFHM[index]);
 			//cv::waitKey(0);
 
-			// Ori
+			// Ori: x, y
 			std::array<cv::Mat, 2> Go;
 			for (size_t idx = 0; idx < G.size(); ++idx) {
-				cv::GaussianBlur(G[idx], Go[idx], cv::Size(0, 0), 4.5);
+				cv::GaussianBlur(G[idx], Go[idx], cv::Size(0, 0), kGSigO);
 			}
 
 			// Pick local maxima of 3x3 and larger than 10
@@ -199,7 +209,6 @@ namespace ST {
 					if (mFHM[index].at<double>(y, x) < 10) {
 						continue;
 					}
-
 
 					// find local max
 					bool maxFlag = true;
@@ -216,7 +225,6 @@ namespace ST {
 								maxFlag = false;
 								break;
 							}
-
 						}
 					}
 
@@ -243,28 +251,6 @@ namespace ST {
 	}
 
 
-
-
-	// test
-	//void ImageConfig::testKeyPoints(const std::vector<KeyPoint>& keyPoints) {
-
-	//	std::cerr << keyPoints.size() << std::endl;
-
-	//	//cv::Mat result(cv::Size(mScaledImages[0].size()), CV_8UC3);
-
-	//	cv::Mat result = cylinderProjection(mOriginalImage, 1000, false);
-
-	//	//cv::cvtColor(mScaledImages[0], result, cv::COLOR_GRAY2BGR);
-
-	//	for (int i = 0; i < keyPoints.size(); ++i) {
-	//		int radius = 16 >> (4 - keyPoints[i].getScale());
-	//		cv::circle(result, cvPoint(keyPoints[i].getX() * radius, keyPoints[i].getY() * radius), radius * 4, CV_RGB(255, 0, 0));
-	//	}
-
-
-	//	cv::imshow("result", result);
-	//	cv::waitKey(0);
-	//}
 
 
 }
