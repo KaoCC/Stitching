@@ -12,45 +12,65 @@ const std::string kDefaultFileList = "list.txt";
 
 
 // tmp
-static std::vector<ST::KeyPoint> nonMaxSuppression(const std::vector<ST::KeyPoint>& originalFeatures) {
+
+const std::size_t kMaxNumOfPoints = 500;
+
+// tmp
+static std::vector<ST::KeyPoint> nonMaxSuppression(std::vector<ST::KeyPoint>& originalFeatures) {
 
 	std::vector<ST::KeyPoint> finalResult;
 
-	double radius = 10000;
+	double radius = 20;
 
-	// sort it !
+	// sort it ! (?)
+	std::sort(originalFeatures.begin(), originalFeatures.end(), ST::KeyPoint::compare);
 
-	while (finalResult.size() < 500) {
+	std::size_t currentNumOfValid = originalFeatures.size();
+	std::vector<bool> validFlags(originalFeatures.size(), true);
 
-		std::vector<bool> suppressionFlags(originalFeatures.size(), false);
+	while (currentNumOfValid > kMaxNumOfPoints) {
 
-		// loop over the KeyPoints
+		double radiusSquare = radius * radius;
+
 		for (int i = 0; i < originalFeatures.size(); ++i) {
 
-			if (suppressionFlags[i] != true) {
+			if (!validFlags[i]) {
+				continue;
+			}
 
-				// Mark the rest of it
-				for (int j = i + 1; j < originalFeatures.size(); ++j) {
-					if (originalFeatures[i].getValue() == originalFeatures[j].getValue()) {
-						suppressionFlags[j] = true;
-					}
 
+			for (int j = i + 1; j < originalFeatures.size(); ++j) {
+
+				if (ST::KeyPoint::computeDistanceSquare(originalFeatures[i], originalFeatures[j]) < radiusSquare) {
+					validFlags[j] = false;
 				}
 
-				// Add KeyPoint to the final result
-				finalResult.push_back(originalFeatures[i]);
-
-				if (finalResult.size() >= 500) {
-					break;
-				}
+				// always true since it is sorted
+				//if (originalFeatures[i].getValue() > originalFeatures[j].getValue()) {
+				//	validFlags[j] = false;
+				//} else {
+				//	validFlags[i] = false;
+				//	break;
+				//}
 
 			}
 
+
 		}
 
+		currentNumOfValid = std::count(validFlags.begin(), validFlags.end(), true);
+		std::cerr << "Valid: " << currentNumOfValid << " Rad: " << radius << '\n';
 
-		radius *= 0.5;
+		radius += 10;
 
+	}
+
+	std::cerr << "Add\n";
+
+	for (size_t i = 0; i < originalFeatures.size(); ++i) {
+		if (validFlags[i]) {
+			finalResult.push_back(originalFeatures[i]);
+		}
 	}
 
 
@@ -110,20 +130,20 @@ int main(int argc, char* argv[]) {
 	std::cerr << "computeKeyPoints\n";
 
 	// test
-	for (int i = 0; i < images.size(); ++i) {
-		testKeyPoints(images[i], features[i]);
-	}
+	//for (int i = 0; i < images.size(); ++i) {
+	//	testKeyPoints(images[i], features[i]);
+	//}
 
 	// non max suppression
-	//std::vector<std::vector<ST::KeyPoint>> FinalResults;
-	//for (auto& feature : features) {
-	//	nonMaxSuppression(feature);
-	//}
+	std::vector<std::vector<ST::KeyPoint>> FinalResults;
+	for (auto& feature : features) {
+		FinalResults.push_back(nonMaxSuppression(feature));
+	}
 
-
-	//for (int i = 0; i < images.size(); ++i) {
-	//	testKeyPoints(images[i], FinalResults[i]);
-	//}
+	// test
+	for (int i = 0; i < images.size(); ++i) {
+		testKeyPoints(images[i], FinalResults[i]);
+	}
 
 	// SubPixel Refinement
 
