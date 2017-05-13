@@ -16,11 +16,11 @@ namespace ST {
 		std::cerr << imgWidth << " " << imgHeight << '\n';
 
 		// width might be wrong !
-		cv::Mat projectionImage(cv::Size((size_t)((imgWidth + 1) * 2), (size_t)(imgHeight * 2)), CV_8UC3);
+		cv::Mat projectionImage(cv::Size((int)((imgWidth + 1) * 2), (int)(imgHeight * 2)), CV_8UC3);
 		//cv::Mat projectionImage(cv::Size(image.size()), CV_8UC3);
 
-		for (size_t j = 0; j < image.size().height; ++j) {
-			for (size_t i = 0; i < image.size().width; ++i) {
+		for (int j = 0; j < image.size().height; ++j) {
+			for (int i = 0; i < image.size().width; ++i) {
 
 
 
