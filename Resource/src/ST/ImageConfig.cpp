@@ -11,7 +11,7 @@
 #include "KeyPoint.hpp"
 
 // tmp
-static const double kGSigP = 4.0;
+static const double kGSigP = 1.0;
 static const double kGSigD = 1.0;
 static const double kGSigI = 1.5;
 static const double kGSigO = 4.5;
