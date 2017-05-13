@@ -128,12 +128,18 @@ namespace ST {
 
 			// Compute x and y derivatives of image
 
-			//Gx, Gy
+			//Gradient : Gx, Gy
 			std::array<cv::Mat, 2> G;
 			computeGradient(mScaledImages[index], G);
 
 			//cv::imshow("G", G[1]);
 			//cv::waitKey(0);
+
+			// Gaussian
+			std::array<cv::Mat, 2> Gg;
+			for (size_t idx = 0; idx < G.size(); ++idx) {
+				cv::GaussianBlur(G[idx], Gg[idx], cv::Size(0, 0), 1.0);
+			}
 
 			// Ixx, Ixy, Iyy
 			std::array<cv::Mat, 3> I { cv::Mat(mScaledImages[index].size(), CV_64F), cv::Mat(mScaledImages[index].size(), CV_64F), cv::Mat(mScaledImages[index].size(), CV_64F) };
@@ -144,15 +150,14 @@ namespace ST {
 			for (int y = 0; y < mScaledImages[index].size().height; ++y) {
 				for (int x = 0; x < mScaledImages[index].size().width; ++x) {
 
-					auto& ix = G[0].at<double>(y, x);
-					auto& iy = G[1].at<double>(y, x);
+					auto& ix = Gg[0].at<double>(y, x);
+					auto& iy = Gg[1].at<double>(y, x);
 
 					Ixx.at<double>(y, x) = ix * ix;
 					Ixy.at<double>(y, x) = ix * iy;
 					Iyy.at<double>(y, x) = iy * iy;
 				}
 			}
-
 
 			std::array<cv::Mat, 3> H { cv::Mat(mScaledImages[index].size(), CV_64F),  cv::Mat(mScaledImages[index].size(), CV_64F), cv::Mat(mScaledImages[index].size(), CV_64F) };
 
@@ -180,6 +185,12 @@ namespace ST {
 
 			//cv::imshow("mFHM", mFHM[index]);
 			//cv::waitKey(0);
+
+			// Ori
+			std::array<cv::Mat, 2> Go;
+			for (size_t idx = 0; idx < G.size(); ++idx) {
+				cv::GaussianBlur(G[idx], Go[idx], cv::Size(0, 0), 4.5);
+			}
 
 			// Pick local maxima of 3x3 and larger than 10
 			for (int y = 0; y < mFHM[index].size().height; ++y) {
@@ -210,7 +221,7 @@ namespace ST {
 					}
 
 					if (maxFlag) {
-						keyPoints.push_back(KeyPoint(x, y, std::atan2(G[1].at<double>(y, x), G[0].at<double>(y, x)), mFHM[index].at<double>(y, x), index));
+						keyPoints.push_back(KeyPoint(x, y, std::atan2(Go[1].at<double>(y, x), Go[0].at<double>(y, x)), mFHM[index].at<double>(y, x), index));
 					}
 
 				}
@@ -219,14 +230,15 @@ namespace ST {
 
 		}
 
-		//std::cerr << keyPoints.size() << std::endl;
+		// test
+		//testKeyPoints(keyPoints);
 
-		testKeyPoints(keyPoints);
+		std::cerr << keyPoints.size() << std::endl;
 
 		return keyPoints;
 	}
 
-	cv::Mat & ImageConfig::getOriginalImage() {
+	const cv::Mat & ImageConfig::getOriginalImage() const {
 		return mOriginalImage;
 	}
 
@@ -234,23 +246,25 @@ namespace ST {
 
 
 	// test
-	void ImageConfig::testKeyPoints(const std::vector<KeyPoint>& keyPoints) {
+	//void ImageConfig::testKeyPoints(const std::vector<KeyPoint>& keyPoints) {
 
-		//cv::Mat result(cv::Size(mScaledImages[0].size()), CV_8UC3);
+	//	std::cerr << keyPoints.size() << std::endl;
 
-		cv::Mat result = cylinderProjection(mOriginalImage, 1000, false);
+	//	//cv::Mat result(cv::Size(mScaledImages[0].size()), CV_8UC3);
 
-		//cv::cvtColor(mScaledImages[0], result, cv::COLOR_GRAY2BGR);
+	//	cv::Mat result = cylinderProjection(mOriginalImage, 1000, false);
 
-		for (int i = 0; i < keyPoints.size(); ++i) {
-			int radius = 16 >> (4 - keyPoints[i].getScale());
-			cv::circle(result, cvPoint(keyPoints[i].getX() * radius, keyPoints[i].getY() * radius), radius * 4, CV_RGB(255, 0, 0));
-		}
+	//	//cv::cvtColor(mScaledImages[0], result, cv::COLOR_GRAY2BGR);
+
+	//	for (int i = 0; i < keyPoints.size(); ++i) {
+	//		int radius = 16 >> (4 - keyPoints[i].getScale());
+	//		cv::circle(result, cvPoint(keyPoints[i].getX() * radius, keyPoints[i].getY() * radius), radius * 4, CV_RGB(255, 0, 0));
+	//	}
 
 
-		cv::imshow("result", result);
-		cv::waitKey(0);
-	}
+	//	cv::imshow("result", result);
+	//	cv::waitKey(0);
+	//}
 
 
 }

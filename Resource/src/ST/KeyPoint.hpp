@@ -27,6 +27,10 @@ namespace ST {
 			return mS;
 		}
 
+		double getValue() const {
+			return mValue;
+		}
+
 	private:
 
 		// coordinates: (x, y)

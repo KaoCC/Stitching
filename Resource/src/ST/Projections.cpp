@@ -42,9 +42,9 @@ namespace ST {
 			cv::cvtColor(projectionImage, projectionImage, cv::COLOR_BGR2GRAY);
 		}
 
-		cv::imshow("proj", projectionImage);
+		//cv::imshow("proj", projectionImage);
 		//cv::imshow("orig", image);
-		cv::waitKey(0);
+		//cv::waitKey(0);
 
 		return projectionImage;
 

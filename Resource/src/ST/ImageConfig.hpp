@@ -21,10 +21,12 @@ namespace ST {
 		void load(const std::string fileName, double focalLength);
 		std::vector<KeyPoint> computeKeyPoints();
 
-		cv::Mat& getOriginalImage();
+		const cv::Mat& getOriginalImage() const;
+
+
 
 		// test
-		void testKeyPoints(const std::vector<KeyPoint>& keyPoints);
+		//void testKeyPoints(const std::vector<KeyPoint>& keyPoints);
 
 	private:
 		cv::Mat mOriginalImage;
