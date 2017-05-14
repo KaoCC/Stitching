@@ -23,6 +23,10 @@ namespace ST {
 
 		const cv::Mat& getOriginalImage() const;
 
+		const cv::Mat& getScaledImages(std::size_t scaleIndex) const {
+			return mScaledImages[scaleIndex];
+		}
+
 		const cv::Mat& getFHM(std::size_t scaleIndex) const {
 			return mFHM[scaleIndex];
 		}

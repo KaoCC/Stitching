@@ -4,6 +4,8 @@
 #include <utility>
 #include <array>
 
+#include <memory>
+
 namespace ST {
 
 	class Descriptor;
@@ -27,6 +29,10 @@ namespace ST {
 		}
 
 
+		double getAngle() const {
+			return mAngle;
+		}
+
 		std::size_t getScale() const {
 			return mScale;
 		}
@@ -43,6 +49,12 @@ namespace ST {
 			mPt.second += deltaY;
 		}
 
+		void setDescriptor(std::shared_ptr<Descriptor> des) {
+			mDescriptor = des;
+		}
+
+		void waveletTransform();
+
 	private:
 
 		// coordinates: (x, y)
@@ -55,7 +67,7 @@ namespace ST {
 
 		std::size_t mScale;
 
-		Descriptor* mDescriptor;
+		std::shared_ptr<Descriptor>  mDescriptor;
 		std::array<double, 3> mWaveletArray;
 
 

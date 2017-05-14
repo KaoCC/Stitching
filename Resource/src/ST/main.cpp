@@ -7,6 +7,8 @@
 #include "KeyPoint.hpp"
 #include "Projections.hpp"
 
+#include "DescriptorMSOP.hpp"
+
 const std::string kDefaultBasePath = "../Resource/input_image/";
 const std::string kDefaultFileList = "list.txt";
 
@@ -133,7 +135,7 @@ static void subPixelRefinement(const ST::ImageConfig& image, std::vector<ST::Key
 		cv::Mat dfdX2(2, 2, CV_64F);
 		dfdX2.at<double>(0, 0) = fValue[2][1] - 2 * fValue[1][1] + fValue[0][1];
 		dfdX2.at<double>(0, 1) = (fValue[0][0] + fValue[2][2] - fValue[0][2] - fValue[2][0]) / 4;
-		dfdX2.at<double>(1, 0) = (fValue[0][0] + fValue[2][2] - fValue[0][2] - fValue[2][0]) / 4;
+		dfdX2.at<double>(1, 0) = dfdX2.at<double>(0, 1);
 		dfdX2.at<double>(1, 1) = fValue[1][2] - 2 * fValue[1][1] + fValue[1][0];
 
 		cv::Mat delta = -dfdX2.inv() * dfdX;
@@ -146,6 +148,13 @@ static void subPixelRefinement(const ST::ImageConfig& image, std::vector<ST::Key
 
 	}
 
+}
+
+//tmp
+void computeDescriptor(const ST::ImageConfig& image, std::vector<ST::KeyPoint>& features) {
+	for (auto& feature : features) {
+		feature.setDescriptor(ST::DescriptorMSOP::createDescriptorMSOP(image, feature));
+	}
 }
 
 int main(int argc, char* argv[]) {
@@ -190,9 +199,9 @@ int main(int argc, char* argv[]) {
 	}
 
 	// test
-	for (int i = 0; i < images.size(); ++i) {
-		testKeyPoints(images[i], finalResults[i]);
-	}
+	//for (int i = 0; i < images.size(); ++i) {
+	//	testKeyPoints(images[i], finalResults[i]);
+	//}
 
 	// SubPixel Refinement
 
@@ -202,12 +211,14 @@ int main(int argc, char* argv[]) {
 	}
 
 	// test
-	for (int i = 0; i < images.size(); ++i) {
-		testKeyPoints(images[i], finalResults[i]);
-	}
+	//for (int i = 0; i < images.size(); ++i) {
+	//	testKeyPoints(images[i], finalResults[i]);
+	//}
 
 	// Create Descriptor
-
+	for (int i = 0; i < images.size(); ++i) {
+		computeDescriptor(images[i], finalResults[i]);
+	}
 
 	// Matching
 
