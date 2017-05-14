@@ -28,11 +28,19 @@ namespace ST {
 
 
 		std::size_t getScale() const {
-			return mS;
+			return mScale;
 		}
 
 		double getValue() const {
 			return mValue;
+		}
+
+		void adjustX(double deltaX) {
+			mPt.first += deltaX;
+		}
+
+		void adjustY(double deltaY) {
+			mPt.second += deltaY;
 		}
 
 	private:
@@ -45,7 +53,7 @@ namespace ST {
 
 		double mValue;
 
-		std::size_t mS;
+		std::size_t mScale;
 
 		Descriptor* mDescriptor;
 		std::array<double, 3> mWaveletArray;

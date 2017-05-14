@@ -23,6 +23,9 @@ namespace ST {
 
 		const cv::Mat& getOriginalImage() const;
 
+		const cv::Mat& getFHM(std::size_t scaleIndex) const {
+			return mFHM[scaleIndex];
+		}
 
 	private:
 		cv::Mat mOriginalImage;
