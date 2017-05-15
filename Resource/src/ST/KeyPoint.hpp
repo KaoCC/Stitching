@@ -53,7 +53,7 @@ namespace ST {
 			mDescriptor = des;
 		}
 
-		void waveletTransform();
+		//void waveletTransform();
 
 	private:
 
@@ -68,7 +68,7 @@ namespace ST {
 		std::size_t mScale;
 
 		std::shared_ptr<Descriptor>  mDescriptor;
-		std::array<double, 3> mWaveletArray;
+
 
 
 	};
