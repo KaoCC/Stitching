@@ -15,7 +15,7 @@ namespace ST {
 
 		static std::shared_ptr<Descriptor> createDescriptorMSOP(const ImageConfig& imageConf, const KeyPoint& keypoint);
 
-		~DescriptorMSOP();
+		virtual ~DescriptorMSOP();
 
 	private:
 
@@ -24,6 +24,7 @@ namespace ST {
 		//cv::Mat mSample;
 		//cv::Mat mPatch;
 		cv::Mat mDes;
+		std::array<double, 3> mWaveletArray;
 
 	};
 

@@ -75,6 +75,42 @@ namespace ST {
 		//cv::imshow("result", descriptor->mDes);
 		//cv::waitKey(0);
 
+		// calculate wavelet Tr.
+
+		descriptor->mWaveletArray[0] = 0;
+		descriptor->mWaveletArray[1] = 0;
+		descriptor->mWaveletArray[2] = 0;
+
+		for (int j = 0; j < descriptor->mDes.size().height; ++j) {
+			for (int i = 0; i < descriptor->mDes.size().width / 2; ++i) {
+				descriptor->mWaveletArray[0] += descriptor->mDes.at<double>(j, i);
+			}
+
+		}
+
+		for (int j = 0; j < descriptor->mDes.size().height / 2; ++j) {
+			for (int i = 0; i < descriptor->mDes.size().width; ++i) {
+				descriptor->mWaveletArray[1] += descriptor->mDes.at<double>(j, i);
+			}
+
+		}
+
+
+		for (int j = 0; j < descriptor->mDes.size().height / 2; ++j) {
+			for (int i = 0; i < descriptor->mDes.size().width / 2; ++i) {
+				descriptor->mWaveletArray[2] += descriptor->mDes.at<double>(j, i);
+			}
+
+		}
+
+		for (int j = descriptor->mDes.size().height / 2; j < descriptor->mDes.size().height; ++j) {
+			for (int i = descriptor->mDes.size().width / 2; i < descriptor->mDes.size().width; ++i) {
+				descriptor->mWaveletArray[2] += descriptor->mDes.at<double>(j, i);
+			}
+
+		}
+
+
 		return descriptor;
 
 	}
