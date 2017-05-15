@@ -21,8 +21,9 @@ namespace ST {
 
 		DescriptorMSOP();
 		
-		cv::Mat mSample;
-		cv::Mat mPatch;
+		//cv::Mat mSample;
+		//cv::Mat mPatch;
+		cv::Mat mDes;
 
 	};
 

@@ -23,20 +23,31 @@ namespace ST {
 		trans.at <double>(0, 2) = keypoint.getX();
 		trans.at <double>(1, 2) = keypoint.getY();
 
+		cv::Mat sample(cv::Size(40, 40), CV_8U);
+		cv::Mat patch(cv::Size(8, 8), CV_8U);
 
-		cv::warpAffine(imageConf.getScaledImages(keypoint.getScale()), descriptor->mSample, trans, cv::Size(40, 40));
-		cv::resize(descriptor->mSample, descriptor->mPatch, cv::Size(8, 8));
+
+		cv::warpAffine(imageConf.getScaledImages(keypoint.getScale()), sample, trans, cv::Size(40, 40));
+		cv::resize(sample, patch, cv::Size(8, 8));
 
 		//cv::imshow("img", imageConf.getScaledImages(keypoint.getScale()));
 		//cv::imshow("result", descriptor->mSample);
 		//cv::waitKey(0);
 
+		// save to des
+
+		for (int j = 0; j < patch.size().height; ++j) {
+			for (int i = 0; i < patch.size().width; ++i) {
+				descriptor->mDes.at<double>(j, i) = patch.at<uchar>(j, i);
+			}
+		}
+
 		// normal
 		double sum = 0;
 
-		for (int j = 0; j < descriptor->mPatch.size().height; ++j) {
-			for (int i = 0; i < descriptor->mPatch.size().width; ++i) {
-				sum += descriptor->mPatch.at<double>(j, i);
+		for (int j = 0; j < patch.size().height; ++j) {
+			for (int i = 0; i < patch.size().width; ++i) {
+				sum += patch.at<uchar>(j, i);
 			}
 
 		}
@@ -44,25 +55,25 @@ namespace ST {
 		double avg = sum / 64;
 
 		double sq = 0;
-		for (int j = 0; j < descriptor->mPatch.size().height; ++j) {
-			for (int i = 0; i < descriptor->mPatch.size().width; ++i) {
-				descriptor->mPatch.at<double>(j, i) -= avg;
-				sq = descriptor->mPatch.at<double>(j, i) * descriptor->mPatch.at<double>(j, i);
+		for (int j = 0; j < patch.size().height; ++j) {
+			for (int i = 0; i < patch.size().width; ++i) {
+				descriptor->mDes.at<double>(j, i) -= avg;
+				sq = descriptor->mDes.at<double>(j, i) * descriptor->mDes.at<double>(j, i);
 			}
 
 		}
 
 		double sigma = std::sqrt(sq / 64);
 
-		for (int j = 0; j < descriptor->mPatch.size().height; ++j) {
-			for (int i = 0; i < descriptor->mPatch.size().width; ++i) {
-				descriptor->mPatch.at<double>(j, i) /= sigma;
+		for (int j = 0; j < patch.size().height; ++j) {
+			for (int i = 0; i < patch.size().width; ++i) {
+				descriptor->mDes.at<double>(j, i) /= sigma;
 			}
 
 		}
 
-		cv::imshow("result", descriptor->mSample);
-		cv::waitKey(0);
+		//cv::imshow("result", descriptor->mDes);
+		//cv::waitKey(0);
 
 		return descriptor;
 
@@ -72,7 +83,7 @@ namespace ST {
 
 
 
-	DescriptorMSOP::DescriptorMSOP() : mSample(cv::Size(40, 40), CV_64F), mPatch(cv::Size(8, 8), CV_64F) {
+	DescriptorMSOP::DescriptorMSOP() :  mDes(cv::Size(8, 8), CV_64F) {
 	}
 
 	DescriptorMSOP::~DescriptorMSOP() {
