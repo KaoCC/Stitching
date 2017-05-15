@@ -15,6 +15,10 @@ namespace ST {
 
 		static std::shared_ptr<Descriptor> createDescriptorMSOP(const ImageConfig& imageConf, const KeyPoint& keypoint);
 
+		static double diff(const KeyPoint& keypointA, const KeyPoint& keypointB);
+
+		static bool waveletCompare(const KeyPoint& keypointA, const KeyPoint& keypointB);
+
 		virtual ~DescriptorMSOP();
 
 	private:

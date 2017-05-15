@@ -53,6 +53,10 @@ namespace ST {
 			mDescriptor = des;
 		}
 
+		std::shared_ptr<Descriptor> getDescriptor() const {
+			return mDescriptor;
+		}
+
 		//void waveletTransform();
 
 	private:

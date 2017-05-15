@@ -8,6 +8,7 @@
 #include "Projections.hpp"
 
 #include "DescriptorMSOP.hpp"
+#include "SimpleMatcher.hpp"
 
 const std::string kDefaultBasePath = "../Resource/input_image/";
 const std::string kDefaultFileList = "list.txt";
@@ -44,7 +45,7 @@ static std::vector<ST::KeyPoint> nonMaxSuppression(std::vector<ST::KeyPoint>& or
 			for (int j = i + 1; j < originalFeatures.size(); ++j) {
 
 				// KAOCC: do we need to consider the same scale value ? (if a.s == b.s ?)
-				if (ST::KeyPoint::computeDistanceSquare(originalFeatures[i], originalFeatures[j]) < radiusSquare) {
+				if (originalFeatures[i].getScale() == originalFeatures[j].getScale() && ST::KeyPoint::computeDistanceSquare(originalFeatures[i], originalFeatures[j]) < radiusSquare) {
 					validFlags[j] = false;
 				}
 
@@ -82,24 +83,24 @@ static std::vector<ST::KeyPoint> nonMaxSuppression(std::vector<ST::KeyPoint>& or
 }
 
 // tmp
-static void testKeyPoints(const ST::ImageConfig& image, const std::vector<ST::KeyPoint>& keyPoints) {
-	std::cerr << keyPoints.size() << std::endl;
-
-	//cv::Mat result(cv::Size(mScaledImages[0].size()), CV_8UC3);
-
-	cv::Mat result = ST::cylinderProjection(image.getOriginalImage(), 1000, false);
-
-	//cv::cvtColor(mScaledImages[0], result, cv::COLOR_GRAY2BGR);
-
-	for (int i = 0; i < keyPoints.size(); ++i) {
-		int radius = 16 >> (4 - keyPoints[i].getScale());
-		cv::circle(result, cvPoint(keyPoints[i].getX() * radius, keyPoints[i].getY() * radius), radius * 4, CV_RGB(255, 0, 0));
-	}
-
-
-	cv::imshow("result", result);
-	cv::waitKey(0);
-}
+//static void testKeyPoints(const ST::ImageConfig& image, const std::vector<ST::KeyPoint>& keyPoints) {
+//	std::cerr << keyPoints.size() << std::endl;
+//
+//	//cv::Mat result(cv::Size(mScaledImages[0].size()), CV_8UC3);
+//
+//	cv::Mat result = ST::cylinderProjection(image.getOriginalImage(), 10000, false);
+//
+//	//cv::cvtColor(mScaledImages[0], result, cv::COLOR_GRAY2BGR);
+//
+//	for (int i = 0; i < keyPoints.size(); ++i) {
+//		int radius = 16 >> (4 - keyPoints[i].getScale());
+//		cv::circle(result, cvPoint(keyPoints[i].getX() * radius, keyPoints[i].getY() * radius), radius * 4, CV_RGB(255, 0, 0));
+//	}
+//
+//
+//	cv::imshow("result", result);
+//	cv::waitKey(0);
+//}
 
 // tmp
 static void subPixelRefinement(const ST::ImageConfig& image, std::vector<ST::KeyPoint>& features) {
@@ -210,10 +211,10 @@ int main(int argc, char* argv[]) {
 		subPixelRefinement(images[i], finalResults[i]);
 	}
 
-	// test
-	//for (int i = 0; i < images.size(); ++i) {
-	//	testKeyPoints(images[i], finalResults[i]);
-	//}
+	//test
+	for (int i = 0; i < images.size(); ++i) {
+		testKeyPoints(images[i], finalResults[i], std::to_string(i));
+	}
 
 	// Create Descriptor
 	for (int i = 0; i < images.size(); ++i) {
@@ -221,8 +222,30 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Matching
+	ST::SimpleMatcher matcher;
 
+	std::vector<ST::MatchPair> matchResults;
+	for (int i = 1; i < images.size(); ++i) {
+		matchResults.push_back(matcher.match(finalResults[i - 1], finalResults[i]));
+	}
 
+	// test
+	//for (const auto& result : matchResults) {
+	//	std::cerr << result.size() << std::endl;
+	//}
+
+	//tmp;
+	std::vector<ST::KeyPoint> aa;
+	std::vector<ST::KeyPoint> bb;
+
+	for (const auto& pair : matchResults[0]) {
+		aa.push_back(*pair.first);
+		bb.push_back(*pair.second);
+	}
+
+	testKeyPoints(images[0], aa, "a");
+	testKeyPoints(images[1], bb, "b");
+	cv::waitKey(0);
 
 
 	return 0;

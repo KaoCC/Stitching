@@ -39,6 +39,7 @@ namespace ST {
 		for (int j = 0; j < patch.size().height; ++j) {
 			for (int i = 0; i < patch.size().width; ++i) {
 				descriptor->mDes.at<double>(j, i) = patch.at<uchar>(j, i);
+
 			}
 		}
 
@@ -54,26 +55,37 @@ namespace ST {
 
 		double avg = sum / 64;
 
+		//std::cerr << "avg:" << avg << '\n';
+
 		double sq = 0;
 		for (int j = 0; j < patch.size().height; ++j) {
 			for (int i = 0; i < patch.size().width; ++i) {
 				descriptor->mDes.at<double>(j, i) -= avg;
-				sq = descriptor->mDes.at<double>(j, i) * descriptor->mDes.at<double>(j, i);
+
+				sq += (descriptor->mDes.at<double>(j, i) * descriptor->mDes.at<double>(j, i));
 			}
 
 		}
 
+		//std::cerr << "SQ:" << sq << '\n';
 		double sigma = std::sqrt(sq / 64);
+
+		if ((int)sigma == 0) {
+			sigma += 0.0001;
+		}
+
+		//std::cerr << "Sig:" << sigma << '\n';
 
 		for (int j = 0; j < patch.size().height; ++j) {
 			for (int i = 0; i < patch.size().width; ++i) {
-				descriptor->mDes.at<double>(j, i) /= sigma;
+				descriptor->mDes.at<double>(j, i) /= (sigma);
+
 			}
 
 		}
 
-		//cv::imshow("result", descriptor->mDes);
-		//cv::waitKey(0);
+		cv::imshow("result", sample);
+		cv::waitKey(0);
 
 		// calculate wavelet Tr.
 
@@ -112,6 +124,52 @@ namespace ST {
 
 
 		return descriptor;
+
+	}
+
+	double DescriptorMSOP::diff(const KeyPoint & keypointA, const KeyPoint & keypointB) {
+
+		auto& desA = keypointA.getDescriptor();
+		auto& desB = keypointB.getDescriptor();
+
+		DescriptorMSOP* desAMSOP = dynamic_cast<DescriptorMSOP*>(desA.get());
+		DescriptorMSOP* desBMSOP = dynamic_cast<DescriptorMSOP*>(desB.get());
+
+		double result = 0;
+
+		for (int j = 0; j < desAMSOP->mDes.size().height; ++j) {
+			for (int i = 0; i < desAMSOP->mDes.size().width; ++i) {
+				result += std::abs((desAMSOP->mDes.at<double>(j, i) - desBMSOP->mDes.at<double>(j, i)));
+
+				//std::cerr << "a:" << desAMSOP->mDes.at<double>(j, i) << " b: " << desBMSOP->mDes.at<double>(j, i) << std::endl;
+			}
+
+		}
+
+		return result;
+
+
+	}
+
+	bool DescriptorMSOP::waveletCompare(const KeyPoint & keypointA, const KeyPoint & keypointB) {
+
+		auto& desA = keypointA.getDescriptor();
+		auto& desB = keypointB.getDescriptor();
+
+		DescriptorMSOP* desAMSOP = dynamic_cast<DescriptorMSOP*>(desA.get());
+		DescriptorMSOP* desBMSOP = dynamic_cast<DescriptorMSOP*>(desB.get());
+
+		bool result = true;
+
+		for (int i = 0; i < desAMSOP->mWaveletArray.size(); ++i) {
+			if (std::abs(desAMSOP->mWaveletArray[i] - desBMSOP->mWaveletArray[i] )> 16) {
+				result = false;
+				break;
+			}
+		}
+
+
+		return result;
 
 	}
 

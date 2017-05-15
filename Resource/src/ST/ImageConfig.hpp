@@ -41,6 +41,7 @@ namespace ST {
 
 
 	void loadImageConfigs(const std::string& basePath, const std::string& fileName, std::vector<ImageConfig>& images);
+	void testKeyPoints(const ST::ImageConfig& image, const std::vector<ST::KeyPoint>& keyPoints, std::string name);
 
 }
 

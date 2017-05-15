@@ -16,6 +16,7 @@ static const double kGSigD = 1.0;
 static const double kGSigI = 1.5;
 static const double kGSigO = 4.5;
 
+static const double kLength = 20000;
 
 namespace ST {
 
@@ -89,7 +90,7 @@ namespace ST {
 
 				// read image
 				// KAOCC: focal length is wrong !
-				images[currentImageIndex++].load(basePath + imageFileName, 1000);
+				images[currentImageIndex++].load(basePath + imageFileName, kLength);
 
 				if (currentImageIndex == numOfImages) {
 					break;
@@ -252,5 +253,24 @@ namespace ST {
 
 
 
+
+	void testKeyPoints(const ST::ImageConfig& image, const std::vector<ST::KeyPoint>& keyPoints, std::string name) {
+		std::cerr << keyPoints.size() << std::endl;
+
+		//cv::Mat result(cv::Size(mScaledImages[0].size()), CV_8UC3);
+
+		cv::Mat result = ST::cylinderProjection(image.getOriginalImage(), kLength, false);
+
+		//cv::cvtColor(mScaledImages[0], result, cv::COLOR_GRAY2BGR);
+
+		for (int i = 0; i < keyPoints.size(); ++i) {
+			int radius = 16 >> (4 - keyPoints[i].getScale());
+			cv::circle(result, cvPoint(keyPoints[i].getX() * radius, keyPoints[i].getY() * radius), radius * 4, CV_RGB(255, 0, 0));
+		}
+
+
+		cv::imshow(name, result);
+		//cv::waitKey(0);
+	}
 
 }
