@@ -4,6 +4,8 @@
 #include <utility>
 #include <array>
 
+#include <memory>
+
 namespace ST {
 
 	class Descriptor;
@@ -27,13 +29,35 @@ namespace ST {
 		}
 
 
+		double getAngle() const {
+			return mAngle;
+		}
+
 		std::size_t getScale() const {
-			return mS;
+			return mScale;
 		}
 
 		double getValue() const {
 			return mValue;
 		}
+
+		void adjustX(double deltaX) {
+			mPt.first += deltaX;
+		}
+
+		void adjustY(double deltaY) {
+			mPt.second += deltaY;
+		}
+
+		void setDescriptor(std::shared_ptr<Descriptor> des) {
+			mDescriptor = des;
+		}
+
+		std::shared_ptr<Descriptor> getDescriptor() const {
+			return mDescriptor;
+		}
+
+		//void waveletTransform();
 
 	private:
 
@@ -45,10 +69,10 @@ namespace ST {
 
 		double mValue;
 
-		std::size_t mS;
+		std::size_t mScale;
 
-		Descriptor* mDescriptor;
-		std::array<double, 3> mWaveletArray;
+		std::shared_ptr<Descriptor>  mDescriptor;
+
 
 
 	};

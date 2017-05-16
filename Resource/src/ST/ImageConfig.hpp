@@ -23,6 +23,13 @@ namespace ST {
 
 		const cv::Mat& getOriginalImage() const;
 
+		const cv::Mat& getScaledImages(std::size_t scaleIndex) const {
+			return mScaledImages[scaleIndex];
+		}
+
+		const cv::Mat& getFHM(std::size_t scaleIndex) const {
+			return mFHM[scaleIndex];
+		}
 
 	private:
 		cv::Mat mOriginalImage;
@@ -34,6 +41,7 @@ namespace ST {
 
 
 	void loadImageConfigs(const std::string& basePath, const std::string& fileName, std::vector<ImageConfig>& images);
+	void testKeyPoints(const ST::ImageConfig& image, const std::vector<ST::KeyPoint>& keyPoints, std::string name);
 
 }
 

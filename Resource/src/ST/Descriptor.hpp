@@ -7,10 +7,15 @@ namespace ST {
 
 
 	class Descriptor {
-
-
+	public:
+		virtual ~Descriptor() = 0;
 
 	};
+
+	// tmp
+	inline Descriptor::~Descriptor() {
+	}
+
 }
 
 
