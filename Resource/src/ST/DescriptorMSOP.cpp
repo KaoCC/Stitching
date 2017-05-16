@@ -10,8 +10,15 @@ namespace ST {
 
 		std::shared_ptr<DescriptorMSOP> descriptor{ new DescriptorMSOP() };
 
+		//std::vector<KeyPoint> points;
+		//points.push_back(keypoint);
+		//testKeyPoints(imageConf, points, "tmp");
 
 		double angle = keypoint.getAngle();
+
+		//angle = 0;
+		//angle = 3.14/16;
+		//std::cerr << "Angle: " << angle << '\n';
 
 		cv::Mat trans(cv::Size(3, 2), CV_64F);
 		trans.at <double>(0, 0) = std::cos(angle);
@@ -26,11 +33,36 @@ namespace ST {
 		cv::Mat sample(cv::Size(40, 40), CV_8U);
 		cv::Mat patch(cv::Size(8, 8), CV_8U);
 
+		//std::cerr << keypoint.getX() << ',' <<keypoint.getY() <<'\n';
 
-		cv::warpAffine(imageConf.getScaledImages(keypoint.getScale()), sample, trans, cv::Size(40, 40));
-		cv::resize(sample, patch, cv::Size(8, 8));
+		//img ref
+		const auto& imgRef = imageConf.getScaledImages(keypoint.getScale());
 
-		//cv::imshow("img", imageConf.getScaledImages(keypoint.getScale()));
+		// test
+		//cv::Mat test(imgRef.size(), CV_8U);
+
+		// KAOCC: check !
+		cv::warpAffine(imgRef, sample, trans, cv::Size(40, 40), cv::WARP_INVERSE_MAP, cv::BORDER_TRANSPARENT);
+
+		//cv::resize(test, sample, cv::Size(40, 40));
+
+		//cv::getRectSubPix(imgRef, cv::Size(40, 40), cv::Point2f(keypoint.getX(), keypoint.getY()), sample);
+		
+		//int scale = std::pow(2, keypoint.getScale());
+
+		//for (int j = 0; j < sample.size().height; ++j) {
+		//	for (int i = 0; i < sample.size().width; ++i) {
+		//		sample.at<uchar>(j, i) = test.at<uchar>(j, i);
+
+		//	}
+		//}
+
+		cv::resize(sample, patch, cv::Size(8, 8), cv::INTER_AREA);
+
+		//cv::imshow("test", test);
+		//cv::imshow("sample", sample);
+
+		//cv::imshow("img", imgRef);
 		//cv::imshow("result", descriptor->mSample);
 		//cv::waitKey(0);
 
@@ -84,7 +116,7 @@ namespace ST {
 
 		}
 
-		cv::imshow("result", sample);
+
 		cv::waitKey(0);
 
 		// calculate wavelet Tr.
