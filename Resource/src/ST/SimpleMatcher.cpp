@@ -2,11 +2,13 @@
 
 #include "DescriptorMSOP.hpp"
 
+#include <opencv2/opencv.hpp>
+
 namespace ST {
 
-	MatchPair SimpleMatcher::match(const std::vector<KeyPoint>& featuresA, const std::vector<KeyPoint>& featuresB) {
+	MatchPairs SimpleMatcher::match(const std::vector<KeyPoint>& featuresA, const std::vector<KeyPoint>& featuresB) {
 
-		MatchPair matchpair;
+		MatchPairs matchpair;
 
 		double threshold = 30;
 		double tmp = 0;
@@ -97,6 +99,56 @@ namespace ST {
 		}
 
 		return matchpair;
+	}
+
+	AffineData SimpleMatcher::computeAffine(const MatchPairs& matchData) {
+
+		AffineData affine;
+
+		// x , y
+		std::vector<std::array<double, 2>> affMatrixA(matchData.size());
+		std::vector<std::array<double, 2>> affMatrixB(matchData.size());
+
+		for (int i = 0; i < matchData.size(); ++i) {
+
+			// get match KeyPoints
+			const auto& keyPointA = *matchData[i].first;
+			const auto& keyPointB = *matchData[i].second;
+
+			affMatrixA[i][0] = keyPointA.getX();
+			affMatrixA[i][1] = keyPointA.getY();
+
+			affMatrixB[i][0] = keyPointB.getX();
+			affMatrixB[i][1] = keyPointB.getY();			
+
+		}
+
+
+		// k ?
+
+		std::array<int, 3> indexArray;
+
+		do {
+
+			for (int i = 0; i < indexArray.size(); ++i) {
+				// tmp
+				indexArray[i] = std::rand() % matchData.size();
+			}
+
+		} while (indexArray[0] == indexArray[1] || indexArray[0] == indexArray[2] || indexArray[1] == indexArray[2]);
+
+
+
+
+
+		return affine;
+
+
+	}
+
+
+
+	AffineData::AffineData() : mAffine(cv::Size(3, 2), CV_64F) {
 	}
 
 }

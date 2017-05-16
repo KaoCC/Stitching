@@ -158,6 +158,9 @@ void computeDescriptor(const ST::ImageConfig& image, std::vector<ST::KeyPoint>& 
 	}
 }
 
+
+
+
 int main(int argc, char* argv[]) {
 
 	std::string basePath;
@@ -224,7 +227,7 @@ int main(int argc, char* argv[]) {
 	// Matching
 	ST::SimpleMatcher matcher;
 
-	std::vector<ST::MatchPair> matchResults;
+	std::vector<ST::MatchPairs> matchResults;
 	for (int i = 1; i < images.size(); ++i) {
 		matchResults.push_back(matcher.match(finalResults[i - 1], finalResults[i]));
 	}
@@ -248,6 +251,11 @@ int main(int argc, char* argv[]) {
 	cv::waitKey(0);
 
 
+	std::vector<ST::AffineData> Affines;
+
+	for (const auto& match : matchResults) {
+		Affines.push_back(matcher.computeAffine(match));
+	}
 
 
 
