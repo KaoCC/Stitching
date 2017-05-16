@@ -42,7 +42,7 @@ namespace ST {
 		//cv::Mat test(imgRef.size(), CV_8U);
 
 		// KAOCC: check !
-		cv::warpAffine(imgRef, sample, trans, cv::Size(40, 40), cv::WARP_INVERSE_MAP, cv::BORDER_TRANSPARENT);
+		cv::warpAffine(imgRef, sample, trans, cv::Size(40, 40), cv::WARP_INVERSE_MAP, cv::BORDER_REPLICATE);
 
 		//cv::resize(test, sample, cv::Size(40, 40));
 

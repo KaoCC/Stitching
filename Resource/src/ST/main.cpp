@@ -212,9 +212,9 @@ int main(int argc, char* argv[]) {
 	}
 
 	//test
-	for (int i = 0; i < images.size(); ++i) {
-		testKeyPoints(images[i], finalResults[i], std::to_string(i));
-	}
+	//for (int i = 0; i < images.size(); ++i) {
+	//	testKeyPoints(images[i], finalResults[i], std::to_string(i));
+	//}
 
 	// Create Descriptor
 	for (int i = 0; i < images.size(); ++i) {
@@ -230,22 +230,25 @@ int main(int argc, char* argv[]) {
 	}
 
 	// test
-	//for (const auto& result : matchResults) {
-	//	std::cerr << result.size() << std::endl;
-	//}
+	for (const auto& result : matchResults) {
+		std::cerr << result.size() << std::endl;
+	}
 
 	//tmp;
 	std::vector<ST::KeyPoint> aa;
 	std::vector<ST::KeyPoint> bb;
 
-	for (const auto& pair : matchResults[0]) {
+	for (const auto& pair : matchResults[2]) {
 		aa.push_back(*pair.first);
 		bb.push_back(*pair.second);
 	}
 
-	testKeyPoints(images[0], aa, "a");
-	testKeyPoints(images[1], bb, "b");
+	testKeyPoints(images[2], aa, "a");
+	testKeyPoints(images[3], bb, "b");
 	cv::waitKey(0);
+
+
+
 
 
 	return 0;
