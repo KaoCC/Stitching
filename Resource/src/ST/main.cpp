@@ -262,8 +262,34 @@ int main(int argc, char* argv[]) {
 	std::cerr << "Affine SZ: " << Affines.size() << std::endl;
 
 	for (const auto& aff : Affines) {
-		std::cerr << "x: " <<aff.getDeltaX() << std::endl;
+		std::cerr << "delta x: " <<aff.getDeltaX() << std::endl;
+		std::cerr << "delta y: " << aff.getDeltaY() << std::endl;
+		std::cerr << aff.getAffineMat() << std::endl;
+
 	}
+
+	// tmp
+	cv::Mat mappedImgA = images[0].getScaledImages(0);
+
+	for (int i = 0; i < images.size() - 1; ++i) {
+
+		// tmp
+		cv::Mat mappedImgTmp = images[i + 1].getScaledImages(0);
+
+		double deltaX = Affines[i].getDeltaX();
+		double deltaY = Affines[i].getDeltaY();
+
+		cv::Mat mappedImgB;
+
+
+
+		//cv::warpAffine(mappedImgTmp, mappedImgB, Affines[i].getAffineMat(), cv::Size(mappedImgA.size().width + deltaX, deltaY));
+
+
+	}
+
+
+	//std::cerr << 
 
 	return 0;
 }

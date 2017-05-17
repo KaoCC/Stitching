@@ -33,6 +33,14 @@ namespace ST {
 		}
 		
 
+		cv::Mat& getAffineMat() {
+			return mAffine;
+		}
+
+		const cv::Mat& getAffineMat() const {
+			return mAffine;
+		}
+
 
 
 	private:

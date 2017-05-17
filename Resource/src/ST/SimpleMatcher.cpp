@@ -8,6 +8,7 @@ namespace ST {
 
 
 	static int kRAN = 50;
+	static int kLoopCount = 400;
 
 
 	MatchPairs SimpleMatcher::match(const std::vector<KeyPoint>& featuresA, const std::vector<KeyPoint>& featuresB) {
@@ -136,7 +137,7 @@ namespace ST {
 
 		int matching = 0;
 
-		for (int counter = 0; counter < 200; ++counter) {
+		for (int counter = 0; counter < kLoopCount; ++counter) {
 
 			std::array<int, 3> indexArray;
 
@@ -194,11 +195,10 @@ namespace ST {
 					affMatrixA[k][0],
 					affMatrixA[k][1],
 				};
-				cv::Mat b (2, 1, CV_64F, bRaw);
 
-				b = (rotation * a) + trans;
+				cv::Mat b = (rotation * a) + trans;
 
-				double dx = b.at<double>(0, 0)  - bRaw[0];
+				double dx = b.at<double>(0, 0) - bRaw[0];
 				double dy = b.at<double>(1, 0) - bRaw[1];
 			
 
