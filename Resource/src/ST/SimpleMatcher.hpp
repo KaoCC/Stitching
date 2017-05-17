@@ -2,6 +2,7 @@
 #define _ST_SIMPLEMATCHER_HPP_
 
 #include "Matcher.hpp"
+#include <opencv2/opencv.hpp>
 
 namespace ST {
 
@@ -11,11 +12,34 @@ namespace ST {
 	public:
 		AffineData();
 
+		void setDeltaX(double deltaX) {
+			mDeltaX = deltaX;
+		}
+
+		void setDeltaY(double deltaY) {
+			mDeltaY = deltaY;
+		}
+
+		void setAffineMat(const cv::Mat& mat) {
+			mAffine = mat;
+		}
+
+		double getDeltaX() const {
+			return mDeltaX;
+		}
+
+		double getDeltaY() const {
+			return mDeltaY;
+		}
+		
+
+
+
 	private:
 
 		cv::Mat mAffine;
-		double deltaX;
-		double deltaY;
+		double mDeltaX;
+		double mDeltaY;
 
 	};
 

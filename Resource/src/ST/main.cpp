@@ -251,13 +251,19 @@ int main(int argc, char* argv[]) {
 	cv::waitKey(0);
 
 
+	std::cerr << "Comptue Affine Mat\n";
+
 	std::vector<ST::AffineData> Affines;
 
 	for (const auto& match : matchResults) {
 		Affines.push_back(matcher.computeAffine(match));
 	}
 
+	std::cerr << "Affine SZ: " << Affines.size() << std::endl;
 
+	for (const auto& aff : Affines) {
+		std::cerr << "x: " <<aff.getDeltaX() << std::endl;
+	}
 
 	return 0;
 }
