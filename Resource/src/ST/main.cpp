@@ -270,21 +270,50 @@ int main(int argc, char* argv[]) {
 
 	// tmp
 	cv::Mat mappedImgA = images[0].getScaledImages(0);
+	cv::imshow("mappedImgA", mappedImgA);
+
 
 	for (int i = 0; i < images.size() - 1; ++i) {
 
 		// tmp
 		cv::Mat mappedImgTmp = images[i + 1].getScaledImages(0);
 
+		cv::imshow("mappedImgTmp", mappedImgTmp);
+		//cv::waitKey(0);
+
 		double deltaX = Affines[i].getDeltaX();
 		double deltaY = Affines[i].getDeltaY();
 
 		cv::Mat mappedImgB;
 
-
+		cv::warpAffine(mappedImgTmp, mappedImgB, Affines[i].getAffineMat(), cv::Size(mappedImgA.size().width + mappedImgTmp.size().width + deltaX, mappedImgTmp.size().height + deltaY), CV_INTER_LINEAR + CV_WARP_FILL_OUTLIERS);
 
 		//cv::warpAffine(mappedImgTmp, mappedImgB, Affines[i].getAffineMat(), cv::Size(mappedImgA.size().width + deltaX, deltaY));
 
+		double maxX = std::max(mappedImgA.size().width, mappedImgB.size().width);
+		double maxY = std::max(mappedImgA.size().height, mappedImgB.size().height);
+
+
+
+		cv::imshow("mappedImgB", mappedImgB);
+		//cv::waitKey(0);
+
+		cv::Mat mergedImg(cv::Size(maxX, maxY), CV_8U);
+
+		for (int p = 0; p < mappedImgA.size().height; ++p) {
+			for (int q = 0; q < mappedImgA.size().width; ++q) {
+				mergedImg.at<uchar>(p, q) = mappedImgA.at<uchar>(p, q);
+			}
+		}
+
+		//for (int p = 0; p < mappedImgB.size().height; ++p) {
+		//	for (int q = 0; q < mappedImgB.size().width; ++q) {
+		//		mergedImg.at<uchar>(p, q) = mappedImgB.at<uchar>(p, q);
+		//	}
+		//}
+
+		cv::imshow("mergedImg", mergedImg);
+		cv::waitKey(0);
 
 	}
 
