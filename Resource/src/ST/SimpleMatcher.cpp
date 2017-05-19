@@ -8,7 +8,7 @@ namespace ST {
 
 
 	static int kRAN = 9;
-	static int kLoopCount = 10000;
+	static int kLoopCount = 15000;
 
 
 	MatchPairs SimpleMatcher::match(const std::vector<KeyPoint>& featuresA, const std::vector<KeyPoint>& featuresB) {
