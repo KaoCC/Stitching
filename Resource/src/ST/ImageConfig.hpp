@@ -21,7 +21,7 @@ namespace ST {
 		static const size_t kScaleSize = 5;
 
 		void load(const std::string fileName, double focalLength);
-		std::vector<KeyPoint> computeKeyPoints();
+		//std::vector<KeyPoint> computeKeyPoints();
 
 		const cv::Mat& getOriginalImage() const;
 
@@ -33,6 +33,10 @@ namespace ST {
 			return mFHM[scaleIndex];
 		}
 
+		cv::Mat& getFHM(std::size_t scaleIndex) {
+			return mFHM[scaleIndex];
+		}
+
 	private:
 		cv::Mat mOriginalImage;
 		std::array<cv::Mat, kScaleSize> mScaledImages;
@@ -40,7 +44,9 @@ namespace ST {
 
 	};
 
+	// helper functions
 
+	void computeGradient(const cv::Mat& inputImage, std::array<cv::Mat, 2>& gradients);
 
 	void loadImageConfigs(const std::string& basePath, const std::string& fileName, std::vector<ImageConfig>& images);
 	void testKeyPoints(const ST::ImageConfig& image, const std::vector<ST::KeyPoint>& keyPoints, std::string name);

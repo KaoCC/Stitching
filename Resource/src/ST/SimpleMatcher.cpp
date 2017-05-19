@@ -7,15 +7,15 @@
 namespace ST {
 
 
-	static int kRAN = 9;
-	static int kLoopCount = 12000;
+	static int kRAN = 7;
+	static int kLoopCount = 20000;
+	static double kThreshold = 60;
 
 
 	MatchPairs SimpleMatcher::match(const std::vector<KeyPoint>& featuresA, const std::vector<KeyPoint>& featuresB) {
 
 		MatchPairs matchpair;
 
-		double threshold = 30;
 		double tmp = 0;
 
 		std::vector<int> indexOfA(featuresA.size());
@@ -24,7 +24,7 @@ namespace ST {
 		// match A with B
 		for (int i = 0; i < featuresA.size(); ++i) {
 			indexOfA[i] = -1;
-			double minimum = threshold;
+			double minimum = kThreshold;
 
 			// loop over B
 			for (int j = 0; j < featuresB.size(); ++j) {
@@ -37,11 +37,11 @@ namespace ST {
 
 				// wavelet compare
 				if (!DescriptorMSOP::waveletCompare(featuresA[i], featuresB[j])) {
-					tmp = threshold;
+					tmp = kThreshold;
 				}
 	
 				// point to point
-				if (tmp < threshold) {
+				if (tmp < kThreshold) {
 					tmp = DescriptorMSOP::diff(featuresA[i], featuresB[j]);
 					//std::cerr << "diff" << tmp << std::endl;
 				}
@@ -62,7 +62,7 @@ namespace ST {
 		// match B with A
 		for (int i = 0; i < featuresB.size(); ++i) {
 			indexOfB[i] = -1;
-			double minimum = threshold;
+			double minimum = kThreshold;
 
 			// loop over A
 			for (int j = 0; j < featuresA.size(); ++j) {
@@ -75,11 +75,11 @@ namespace ST {
 
 				// wavelet compare
 				if (!DescriptorMSOP::waveletCompare(featuresB[i], featuresA[j])) {
-					tmp = threshold;
+					tmp = kThreshold;
 				}
 
 				// point to point
-				if (tmp < threshold) {
+				if (tmp < kThreshold) {
 					tmp = DescriptorMSOP::diff(featuresB[i], featuresA[j]);
 					//std::cerr << "diff" << tmp << std::endl;
 				}
@@ -133,7 +133,6 @@ namespace ST {
 		std::srand(std::time(0));
 
 		// k ?
-
 		// loop  here 
 
 		int matching = 0;
@@ -171,7 +170,7 @@ namespace ST {
 			cv::Mat affineMatrix = cv::getAffineTransform(src, dst);
 
 			if (withTripod) {
-				// KAOCC: this is wrong ....
+				// KAOCC: this is a workaround ....
 				affineMatrix.at<double>(0, 0) = 1;
 				affineMatrix.at<double>(0, 1) = 0;
 				affineMatrix.at<double>(1, 0) = 0;
