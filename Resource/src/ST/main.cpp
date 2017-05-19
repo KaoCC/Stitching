@@ -15,7 +15,7 @@
 const std::string kDefaultBasePath = "../Resource/input_image/";
 const std::string kDefaultFileList = "list.txt";
 
-const bool kWithTripod = false;
+const bool kWithTripod = true;
 
 // tmp
 
