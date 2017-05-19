@@ -12,17 +12,17 @@
 
 // tmp
 static const double kGSigP = 1.0;
-static const double kGSigD = 1.0;
-static const double kGSigI = 1.5;
-static const double kGSigO = 4.5;
+//static const double kGSigD = 1.0;
+//static const double kGSigI = 1.5;
+//static const double kGSigO = 4.5;
 
-static const double kLength = 1200;
+static const double kLength = 10000;
 
 namespace ST {
 
 
 	// 0: x, 1: y
-	static void computeGradient(const cv::Mat& inputImage, std::array<cv::Mat, 2>& gradients) {
+	void computeGradient(const cv::Mat& inputImage, std::array<cv::Mat, 2>& gradients) {
 
 		cv::Mat& Dx = gradients[0];
 		cv::Sobel(inputImage, Dx, CV_64F, 1, 0, 3);
@@ -125,127 +125,122 @@ namespace ST {
 
 	}
 
-	std::vector<KeyPoint> ImageConfig::computeKeyPoints() {
-
-		// yet to be done
-
-		std::vector<KeyPoint> keyPoints;
-
-		for (size_t index = 0; index < kScaleSize; ++index) {
+	//std::vector<KeyPoint> ImageConfig::computeKeyPoints() {
 
 
+	//	std::vector<KeyPoint> keyPoints;
 
-			// .... lots of stuff here
+	//	for (size_t index = 0; index < kScaleSize; ++index) {
 
-			// Compute x and y derivatives of image
+	//		// Compute x and y derivatives of image
 
-			//Gradient : Gx, Gy
-			std::array<cv::Mat, 2> G;
-			computeGradient(mScaledImages[index], G);
+	//		//Gradient : Gx, Gy
+	//		std::array<cv::Mat, 2> G;
+	//		computeGradient(mScaledImages[index], G);
 
-			//cv::imshow("G", G[1]);
-			//cv::waitKey(0);
+	//		//cv::imshow("G", G[1]);
+	//		//cv::waitKey(0);
 
-			// Gaussian: x, y
-			std::array<cv::Mat, 2> Gg;
-			for (size_t idx = 0; idx < G.size(); ++idx) {
-				cv::GaussianBlur(G[idx], Gg[idx], cv::Size(0, 0), kGSigD);
-			}
+	//		// Gaussian: x, y
+	//		std::array<cv::Mat, 2> Gg;
+	//		for (size_t idx = 0; idx < G.size(); ++idx) {
+	//			cv::GaussianBlur(G[idx], Gg[idx], cv::Size(0, 0), kGSigD);
+	//		}
 
-			// Ixx, Ixy, Iyy
-			std::array<cv::Mat, 3> I { cv::Mat(mScaledImages[index].size(), CV_64F), cv::Mat(mScaledImages[index].size(), CV_64F), cv::Mat(mScaledImages[index].size(), CV_64F) };
-			auto& Ixx = I[0];
-			auto& Ixy = I[1];
-			auto& Iyy = I[2];
+	//		// Ixx, Ixy, Iyy
+	//		std::array<cv::Mat, 3> I { cv::Mat(mScaledImages[index].size(), CV_64F), cv::Mat(mScaledImages[index].size(), CV_64F), cv::Mat(mScaledImages[index].size(), CV_64F) };
+	//		auto& Ixx = I[0];
+	//		auto& Ixy = I[1];
+	//		auto& Iyy = I[2];
 
-			for (int y = 0; y < mScaledImages[index].size().height; ++y) {
-				for (int x = 0; x < mScaledImages[index].size().width; ++x) {
+	//		for (int y = 0; y < mScaledImages[index].size().height; ++y) {
+	//			for (int x = 0; x < mScaledImages[index].size().width; ++x) {
 
-					auto& ix = Gg[0].at<double>(y, x);
-					auto& iy = Gg[1].at<double>(y, x);
+	//				auto& ix = Gg[0].at<double>(y, x);
+	//				auto& iy = Gg[1].at<double>(y, x);
 
-					Ixx.at<double>(y, x) = ix * ix;
-					Ixy.at<double>(y, x) = ix * iy;
-					Iyy.at<double>(y, x) = iy * iy;
-				}
-			}
+	//				Ixx.at<double>(y, x) = ix * ix;
+	//				Ixy.at<double>(y, x) = ix * iy;
+	//				Iyy.at<double>(y, x) = iy * iy;
+	//			}
+	//		}
 
-			std::array<cv::Mat, 3> H { cv::Mat(mScaledImages[index].size(), CV_64F),  cv::Mat(mScaledImages[index].size(), CV_64F), cv::Mat(mScaledImages[index].size(), CV_64F) };
+	//		std::array<cv::Mat, 3> H { cv::Mat(mScaledImages[index].size(), CV_64F),  cv::Mat(mScaledImages[index].size(), CV_64F), cv::Mat(mScaledImages[index].size(), CV_64F) };
 
-			// compute Gaussian
-			for (size_t idx = 0; idx < H.size(); ++idx) {
-				cv::GaussianBlur(I[idx], H[idx], cv::Size(0, 0), kGSigI);
-			}
-
-
-			//cv::imshow("H", H[0]);
-			//cv::waitKey(0);
-
-			mFHM[index] = cv::Mat(mScaledImages[index].size(), CV_64F);
-
-			for (int y = 0; y < mScaledImages[index].size().height; ++y) {
-				for (int x = 0; x < mScaledImages[index].size().width; ++x) {
-
-					double det = H[0].at<double>(y, x) * H[2].at<double>(y, x) - H[1].at<double>(y, x) * H[1].at<double>(y, x);
-					double trace = H[0].at<double>(y, x) + H[2].at<double>(y, x);
-
-					mFHM[index].at<double>(y, x) = det / (trace + 0.0001);		// tmp
-
-				}
-			}
-
-			//cv::imshow("mFHM", mFHM[index]);
-			//cv::waitKey(0);
-
-			// Ori: x, y
-			std::array<cv::Mat, 2> Go;
-			for (size_t idx = 0; idx < G.size(); ++idx) {
-				cv::GaussianBlur(G[idx], Go[idx], cv::Size(0, 0), kGSigO);
-			}
-
-			// Pick local maxima of 3x3 and larger than 10
-			for (int y = 0; y < mFHM[index].size().height; ++y) {
-				for (int x = 0; x < mFHM[index].size().width; ++x) {
-
-					if (mFHM[index].at<double>(y, x) < 10) {
-						continue;
-					}
-
-					// find local max
-					bool maxFlag = true;
-					for (int dy = -1; dy < 1; ++dy) {
-						for (int dx = -1; dx < 1;  ++dx) {
-
-							// check the boundary
-							if ((dy == 0 && dx == 0) || (x + dx == mFHM[index].size().width) || (x + dx < 0)  || (y + dy == mFHM[index].size().height) || (y + dy < 0) ) {
-								continue;
-							}
-
-							// not the local max ...
-							if (mFHM[index].at<double>(y  + dy, x + dx) > mFHM[index].at<double>(y, x)) {
-								maxFlag = false;
-								break;
-							}
-						}
-					}
-
-					if (maxFlag) {
-						keyPoints.push_back(KeyPoint(x, y, std::atan2(Go[1].at<double>(y, x), Go[0].at<double>(y, x)), mFHM[index].at<double>(y, x), index));
-					}
-
-				}
-			}
+	//		// compute Gaussian
+	//		for (size_t idx = 0; idx < H.size(); ++idx) {
+	//			cv::GaussianBlur(I[idx], H[idx], cv::Size(0, 0), kGSigI);
+	//		}
 
 
-		}
+	//		//cv::imshow("H", H[0]);
+	//		//cv::waitKey(0);
 
-		// test
-		//testKeyPoints(keyPoints);
+	//		mFHM[index] = cv::Mat(mScaledImages[index].size(), CV_64F);
 
-		std::cerr << keyPoints.size() << std::endl;
+	//		for (int y = 0; y < mScaledImages[index].size().height; ++y) {
+	//			for (int x = 0; x < mScaledImages[index].size().width; ++x) {
 
-		return keyPoints;
-	}
+	//				double det = H[0].at<double>(y, x) * H[2].at<double>(y, x) - H[1].at<double>(y, x) * H[1].at<double>(y, x);
+	//				double trace = H[0].at<double>(y, x) + H[2].at<double>(y, x);
+
+	//				mFHM[index].at<double>(y, x) = det / (trace + 0.0001);		// tmp
+
+	//			}
+	//		}
+
+	//		//cv::imshow("mFHM", mFHM[index]);
+	//		//cv::waitKey(0);
+
+	//		// Ori: x, y
+	//		std::array<cv::Mat, 2> Go;
+	//		for (size_t idx = 0; idx < G.size(); ++idx) {
+	//			cv::GaussianBlur(G[idx], Go[idx], cv::Size(0, 0), kGSigO);
+	//		}
+
+	//		// Pick local maxima of 3x3 and larger than 10
+	//		for (int y = 0; y < mFHM[index].size().height; ++y) {
+	//			for (int x = 0; x < mFHM[index].size().width; ++x) {
+
+	//				if (mFHM[index].at<double>(y, x) < 10) {
+	//					continue;
+	//				}
+
+	//				// find local max
+	//				bool maxFlag = true;
+	//				for (int dy = -1; dy < 1; ++dy) {
+	//					for (int dx = -1; dx < 1;  ++dx) {
+
+	//						// check the boundary
+	//						if ((dy == 0 && dx == 0) || (x + dx == mFHM[index].size().width) || (x + dx < 0)  || (y + dy == mFHM[index].size().height) || (y + dy < 0) ) {
+	//							continue;
+	//						}
+
+	//						// not the local max ...
+	//						if (mFHM[index].at<double>(y  + dy, x + dx) > mFHM[index].at<double>(y, x)) {
+	//							maxFlag = false;
+	//							break;
+	//						}
+	//					}
+	//				}
+
+	//				if (maxFlag) {
+	//					keyPoints.push_back(KeyPoint(x, y, std::atan2(Go[1].at<double>(y, x), Go[0].at<double>(y, x)), mFHM[index].at<double>(y, x), index));
+	//				}
+
+	//			}
+	//		}
+
+
+	//	}
+
+	//	// test
+	//	//testKeyPoints(keyPoints);
+
+	//	std::cerr << keyPoints.size() << std::endl;
+
+	//	return keyPoints;
+	//}
 
 	const cv::Mat & ImageConfig::getOriginalImage() const {
 		return mOriginalImage;
@@ -304,8 +299,7 @@ namespace ST {
 				//cv::Mat mappedImgB;
 
 				cv::warpAffine(mappedImgTmp, mappedImgB, affines[counter].getAffineMat(),
-					cv::Size(mappedImgTmp.size().width + deltaX, mappedImgTmp.size().height + deltaY),
-					CV_INTER_LINEAR + CV_WARP_FILL_OUTLIERS);
+					cv::Size(mappedImgTmp.size().width + deltaX, mappedImgTmp.size().height + deltaY));
 
 				mappedImgTmp = mappedImgB;
 
@@ -316,7 +310,6 @@ namespace ST {
 
 			double maxX = std::max(mappedImgA.size().width, mappedImgB.size().width);
 			double maxY = std::max(mappedImgA.size().height, mappedImgB.size().height);
-
 
 
 			//cv::imshow("mappedImgB", mappedImgB);

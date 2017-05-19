@@ -7,7 +7,8 @@
 namespace ST {
 
 	class DetectorMSOP : public Detector {
-
+	public:
+		virtual std::vector<KeyPoint> detect(ImageConfig& imageConf) override;
 	};
 
 

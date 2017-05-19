@@ -4,13 +4,15 @@
 
 #include <vector>
 
+
 namespace ST {
 
 	class KeyPoint;
+	class ImageConfig;
 
 	class Detector {
 	public:
-		virtual void detect(std::vector<KeyPoint>& keypoints) = 0;
+		virtual std::vector<KeyPoint> detect(ImageConfig& imageConf) = 0;
 	};
 
 

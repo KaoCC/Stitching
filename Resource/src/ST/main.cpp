@@ -10,21 +10,23 @@
 #include "DescriptorMSOP.hpp"
 #include "SimpleMatcher.hpp"
 
+#include "DetectorMSOP.hpp"
+
 const std::string kDefaultBasePath = "../Resource/input_image/";
 const std::string kDefaultFileList = "list.txt";
 
-const bool kWithTripod = true;
+const bool kWithTripod = false;
 
 // tmp
 
-const std::size_t kMaxNumOfPoints = 500;
+const std::size_t kMaxNumOfPoints = 2000;
 
 // tmp
 static std::vector<ST::KeyPoint> nonMaxSuppression(std::vector<ST::KeyPoint>& originalFeatures) {
 
 	std::vector<ST::KeyPoint> finalResult;
 
-	double radius = 20;
+	double radius = 10;
 
 	// sort it ! (?)
 	std::sort(originalFeatures.begin(), originalFeatures.end(), ST::KeyPoint::compare);
@@ -131,6 +133,7 @@ static void subPixelRefinement(const ST::ImageConfig& image, std::vector<ST::Key
 		}
 
 		//X = (x, y)
+		//From slides
 		cv::Mat dfdX(2, 1, CV_64F);
 		dfdX.at<double>(0, 0) = (fValue[2][1] - fValue[0][1]) / 2;
 		dfdX.at<double>(1, 0) = (fValue[1][2] - fValue[1][0]) / 2;
@@ -216,7 +219,7 @@ static cv::Mat drift(int width, int height, const cv::Mat& affine, const cv::Mat
 	//cv::Mat newImage(cv::Size(newWidth, height), CV_8U);
 
 	cv::Mat newImage;
-	cv::warpPerspective(img, newImage, perspective, cv::Size(newWidth, height), CV_INTER_LINEAR + CV_WARP_FILL_OUTLIERS);
+	cv::warpPerspective(img, newImage, perspective, cv::Size(newWidth, height));
 
 	return newImage;
 }
@@ -242,20 +245,24 @@ int main(int argc, char* argv[]) {
 	ST::loadImageConfigs(basePath, fileList, images);
 
 
+	std::cerr << "Detect KeyPoints\n";
+
+	ST::DetectorMSOP detector;
 
 	// compute features
 	std::vector<std::vector<ST::KeyPoint>> features;
 	for (auto& image : images) {
-		features.push_back(image.computeKeyPoints());
+		features.push_back(detector.detect(image));
 	}
 
 
-	std::cerr << "computeKeyPoints\n";
 
 	// test
 	//for (int i = 0; i < images.size(); ++i) {
 	//	testKeyPoints(images[i], features[i]);
 	//}
+
+	std::cerr << "Non max suppression\n";
 
 	// non max suppression
 	std::vector<std::vector<ST::KeyPoint>> finalResults;
@@ -280,11 +287,13 @@ int main(int argc, char* argv[]) {
 	//	testKeyPoints(images[i], finalResults[i], std::to_string(i));
 	//}
 
+	std::cerr << "Create Descriptor\n";
 	// Create Descriptor
 	for (int i = 0; i < images.size(); ++i) {
 		computeDescriptor(images[i], finalResults[i]);
 	}
 
+	std::cerr << "Matching\n";
 	// Matching
 	ST::SimpleMatcher matcher;
 
@@ -298,6 +307,7 @@ int main(int argc, char* argv[]) {
 		std::cerr << result.size() << std::endl;
 	}
 
+	std::cerr << "Image Pairs\n";
 	//tmp;
 
 	//int ai = 0; int bi = ai + 1;
@@ -320,8 +330,6 @@ int main(int argc, char* argv[]) {
 	//}
 
 
-
-
 	std::cerr << "Comptue Affine Mat\n";
 
 	std::vector<ST::AffineData> affines;
@@ -330,7 +338,7 @@ int main(int argc, char* argv[]) {
 		affines.push_back(matcher.computeAffine(match, kWithTripod));
 	}
 
-	std::cerr << "Affine SZ: " << affines.size() << std::endl;
+	std::cerr << "Affine Size: " << affines.size() << std::endl;
 
 	for (const auto& aff : affines) {
 		std::cerr << "delta x: " <<aff.getDeltaX() << std::endl;
@@ -339,10 +347,7 @@ int main(int argc, char* argv[]) {
 
 	}
 
-	// KAOCC: todo : load imag in color mode
-
-
-	auto mappedImg = ST::stitch(images, affines);
+	const auto& mappedImg = ST::stitch(images, affines);
 
 
 
@@ -351,6 +356,7 @@ int main(int argc, char* argv[]) {
 	//cv::imshow("driftImg", driftImg);
 	//cv::imwrite("driftImg.jpg", driftImg);
 
+	std::cerr << "Output merged image\n";
 	cv::imwrite("mappedImg_Merged.jpg", mappedImg);
 	cv::waitKey(0);
 
