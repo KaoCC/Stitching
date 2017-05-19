@@ -7,8 +7,8 @@
 namespace ST {
 
 
-	static int kRAN = 50;
-	static int kLoopCount = 400;
+	static int kRAN = 9;
+	static int kLoopCount = 10000;
 
 
 	MatchPairs SimpleMatcher::match(const std::vector<KeyPoint>& featuresA, const std::vector<KeyPoint>& featuresB) {
@@ -130,6 +130,7 @@ namespace ST {
 
 
 		// rand seed ?
+		std::srand(std::time(0));
 
 		// k ?
 
@@ -219,6 +220,7 @@ namespace ST {
 
 		}
 
+		std::cerr << "matching: " << matching << std::endl;
 
 		return affineData;
 
