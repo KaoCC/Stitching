@@ -117,7 +117,7 @@ namespace ST {
 		}
 
 
-		cv::waitKey(0);
+		//cv::waitKey(0);
 
 		// calculate wavelet Tr.
 
@@ -161,8 +161,8 @@ namespace ST {
 
 	double DescriptorMSOP::diff(const KeyPoint & keypointA, const KeyPoint & keypointB) {
 
-		auto& desA = keypointA.getDescriptor();
-		auto& desB = keypointB.getDescriptor();
+		const auto& desA = keypointA.getDescriptor();
+		const auto& desB = keypointB.getDescriptor();
 
 		DescriptorMSOP* desAMSOP = dynamic_cast<DescriptorMSOP*>(desA.get());
 		DescriptorMSOP* desBMSOP = dynamic_cast<DescriptorMSOP*>(desB.get());
@@ -185,8 +185,8 @@ namespace ST {
 
 	bool DescriptorMSOP::waveletCompare(const KeyPoint & keypointA, const KeyPoint & keypointB) {
 
-		auto& desA = keypointA.getDescriptor();
-		auto& desB = keypointB.getDescriptor();
+		const auto& desA = keypointA.getDescriptor();
+		const auto& desB = keypointB.getDescriptor();
 
 		DescriptorMSOP* desAMSOP = dynamic_cast<DescriptorMSOP*>(desA.get());
 		DescriptorMSOP* desBMSOP = dynamic_cast<DescriptorMSOP*>(desB.get());
@@ -194,7 +194,7 @@ namespace ST {
 		bool result = true;
 
 		for (int i = 0; i < desAMSOP->mWaveletArray.size(); ++i) {
-			if (std::abs(desAMSOP->mWaveletArray[i] - desBMSOP->mWaveletArray[i] )> 16) {
+			if (std::abs(desAMSOP->mWaveletArray[i] - desBMSOP->mWaveletArray[i] ) > 16) {
 				result = false;
 				break;
 			}

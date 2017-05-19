@@ -8,6 +8,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "AffineData.hpp"
+
 namespace ST {
 
 	class KeyPoint;
@@ -42,6 +44,8 @@ namespace ST {
 
 	void loadImageConfigs(const std::string& basePath, const std::string& fileName, std::vector<ImageConfig>& images);
 	void testKeyPoints(const ST::ImageConfig& image, const std::vector<ST::KeyPoint>& keyPoints, std::string name);
+
+	cv::Mat stitch(const std::vector<ST::ImageConfig>& imageConfigs, const std::vector<ST::AffineData>& affines);
 
 }
 

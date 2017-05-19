@@ -8,7 +8,7 @@ namespace ST {
 
 
 	static int kRAN = 9;
-	static int kLoopCount = 5000;
+	static int kLoopCount = 12000;
 
 
 	MatchPairs SimpleMatcher::match(const std::vector<KeyPoint>& featuresA, const std::vector<KeyPoint>& featuresB) {
@@ -241,8 +241,5 @@ namespace ST {
 	}
 
 
-
-	AffineData::AffineData() : mAffine(cv::Mat(cv::Size(3, 2), CV_64F)) {
-	}
 
 }

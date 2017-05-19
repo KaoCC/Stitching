@@ -13,6 +13,7 @@
 const std::string kDefaultBasePath = "../Resource/input_image/";
 const std::string kDefaultFileList = "list.txt";
 
+const bool kWithTripod = true;
 
 // tmp
 
@@ -152,13 +153,73 @@ static void subPixelRefinement(const ST::ImageConfig& image, std::vector<ST::Key
 }
 
 //tmp
-void computeDescriptor(const ST::ImageConfig& image, std::vector<ST::KeyPoint>& features) {
+static void computeDescriptor(const ST::ImageConfig& image, std::vector<ST::KeyPoint>& features) {
 	for (auto& feature : features) {
 		feature.setDescriptor(ST::DescriptorMSOP::createDescriptorMSOP(image, feature));
 	}
 }
 
 
+//test code 
+static cv::Mat drift(int width, int height, const cv::Mat& affine, const cv::Mat& img) {
+
+	double rawXY[3] = {
+		width,
+		0,
+		1
+	};
+
+	cv::Mat originalXY (3, 1, CV_64F, rawXY);
+	cv::Mat newXY = affine * originalXY;
+
+	std::cerr << "test\n";
+
+	double eleX = newXY.at<double>(0, 0);
+	double eleY = newXY.at<double>(1, 0);
+
+	int newWidth = std::sqrt(eleX * eleX + eleY * eleY);
+
+
+	double rawXYbar[3] = {
+		width,
+		height,
+		1
+	};
+
+	cv::Mat originalXYbar(3, 1, CV_64F, rawXYbar);
+	cv::Mat newXYbar = affine * originalXYbar;
+
+	std::cerr << "test2\n";
+
+	double eleXbar = newXYbar.at<double>(0, 0);
+	double eleYbar = newXYbar.at<double>(1, 0);
+
+	cv::Point2f src[4] = {
+		cv::Point2d(0, 0),
+		cv::Point2d(0, height),
+		cv::Point2d(eleX, eleY),
+		cv::Point2d(eleXbar, eleYbar),
+	};
+
+
+	cv::Point2f dst[4] = {
+		cv::Point2d(0, 0),
+		cv::Point2d(0, height),
+		cv::Point2d(newWidth, 0),
+		cv::Point2d(newWidth, height),
+	};
+
+	cv::Mat perspective = cv::getPerspectiveTransform(src, dst);
+
+	std::cerr << "perspective:" << perspective << std::endl;
+
+	//cv::Mat newImage(cv::Size(newWidth, height), CV_8U);
+
+	cv::Mat newImage;
+	cv::warpPerspective(img, newImage, perspective, cv::Size(newWidth, height), CV_INTER_LINEAR + CV_WARP_FILL_OUTLIERS);
+
+	return newImage;
+}
 
 
 int main(int argc, char* argv[]) {
@@ -263,15 +324,15 @@ int main(int argc, char* argv[]) {
 
 	std::cerr << "Comptue Affine Mat\n";
 
-	std::vector<ST::AffineData> Affines;
+	std::vector<ST::AffineData> affines;
 
 	for (const auto& match : matchResults) {
-		Affines.push_back(matcher.computeAffine(match));
+		affines.push_back(matcher.computeAffine(match, kWithTripod));
 	}
 
-	std::cerr << "Affine SZ: " << Affines.size() << std::endl;
+	std::cerr << "Affine SZ: " << affines.size() << std::endl;
 
-	for (const auto& aff : Affines) {
+	for (const auto& aff : affines) {
 		std::cerr << "delta x: " <<aff.getDeltaX() << std::endl;
 		std::cerr << "delta y: " << aff.getDeltaY() << std::endl;
 		std::cerr << aff.getAffineMat() << std::endl;
@@ -280,119 +341,18 @@ int main(int argc, char* argv[]) {
 
 	// KAOCC: todo : load imag in color mode
 
-	// tmp
-	cv::Mat mappedImgA = images[0].getScaledImages(0);
 
-
-	for (int i = 0; i < images.size() - 1; ++i) {
-
-		//cv::Mat mappedImgA = images[i].getScaledImages(0);
-
-		//cv::imshow("mappedImgA", mappedImgA);
-
-		// tmp
-		cv::Mat mappedImgTmp = images[i + 1].getScaledImages(0);
-
-		//cv::imshow("mappedImgTmp", mappedImgTmp);
-		//cv::waitKey(0);
-
-		cv::Mat mappedImgB;
-
-		// Affine Transform
-		for (int counter = 0; counter <= i; ++counter) {
-
-			//std::cerr << "counter: " << counter << std::endl;
-
-			double deltaX = Affines[counter].getDeltaX();
-			double deltaY = Affines[counter].getDeltaY();
-
-			//cv::Mat mappedImgB;
-
-			cv::warpAffine(mappedImgTmp, mappedImgB, Affines[counter].getAffineMat(),
-				cv::Size(mappedImgTmp.size().width + deltaX, mappedImgTmp.size().height + deltaY),
-				CV_INTER_LINEAR + CV_WARP_FILL_OUTLIERS);
-
-			mappedImgTmp = mappedImgB;
-
-		}
+	auto mappedImg = ST::stitch(images, affines);
 
 
 
+	//std::cerr << "Drift" << std::endl;
+	//cv::Mat driftImg = drift(mappedImgA.size().width, images[0].getScaledImages(0).size().height, Affines[images.size() - 2].getAffineMat() , mappedImgA);
+	//cv::imshow("driftImg", driftImg);
+	//cv::imwrite("driftImg.jpg", driftImg);
 
-		double maxX = std::max(mappedImgA.size().width, mappedImgB.size().width);
-		double maxY = std::max(mappedImgA.size().height, mappedImgB.size().height);
-
-
-
-		//cv::imshow("mappedImgB", mappedImgB);
-		//cv::waitKey(0);
-
-		cv::Mat mergedImg(cv::Size(maxX, maxY), CV_8U);
-
-
-		//const auto& mappedImageRefA = (deltaX < 0 || deltaY < 0) ? mappedImgB : mappedImgA;
-
-		for (int p = 0; p < mappedImgA.size().height; ++p) {
-			for (int q = 0; q < mappedImgA.size().width; ++q) {
-				mergedImg.at<uchar>(p, q) = mappedImgA.at<uchar>(p, q);
-			}
-		}
-
-		for (int p = 0; p < mappedImgB.size().height; ++p) {
-			for (int q = 0; q < mappedImgB.size().width; ++q) {
-				if (mappedImgB.at<uchar>(p, q) != 0) {
-					mergedImg.at<uchar>(p, q) = mappedImgB.at<uchar>(p, q);
-				}
-			}
-		}
-
-
-		cv::imshow("mergedImg", mergedImg);
-		cv::waitKey(0);
-
-
-		double yMin = std::min(mappedImgA.size().height, mappedImgB.size().height);
-		uchar ptr_mean;
-		for (int f = 0; f < yMin; ++f) {
-			int i1;
-			int i2;
-
-			for (i1 = 0; i1 < mappedImgB.size().width; ++i1) {
-				
-				ptr_mean = mappedImgB.at<uchar>(f, i1);
-				if (ptr_mean> 5) break;
-			}
-
-			for (i2 = mappedImgA.size().width - 1; i2 >= 0; --i2) {
-				ptr_mean = mappedImgA.at<uchar>(f, i2);
-				if (ptr_mean> 5) break;
-			}
-
-			if (i1 < i2) {
-
-				for (int index = i1; index <= i2; ++index) {
-					double ratio = static_cast<double>((index - i1) / (i2 - i1 + 1));
-					mergedImg.at<uchar>(f, index) = ratio * mappedImgB.at<uchar>(f, index) + (1 - ratio) * mappedImgA.at<uchar>(f, index);
-				}
-
-			}
-
-
-		}
-
-		//cv::imshow("mergedImgNew", mergedImg);
-		//cv::waitKey(0);
-
-
-		mappedImgA = mergedImg;
-
-		
-	}
-
-
-	std::cerr << "Drift" << std::endl;
-
-
+	cv::imwrite("mappedImg_Merged.jpg", mappedImg);
+	cv::waitKey(0);
 
 	return 0;
 }
