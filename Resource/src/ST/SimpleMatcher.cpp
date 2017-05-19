@@ -8,7 +8,7 @@ namespace ST {
 
 
 	static int kRAN = 9;
-	static int kLoopCount = 15000;
+	static int kLoopCount = 5000;
 
 
 	MatchPairs SimpleMatcher::match(const std::vector<KeyPoint>& featuresA, const std::vector<KeyPoint>& featuresB) {
@@ -106,7 +106,7 @@ namespace ST {
 		return matchpair;
 	}
 
-	AffineData SimpleMatcher::computeAffine(const MatchPairs& matchData) {
+	AffineData SimpleMatcher::computeAffine(const MatchPairs& matchData, bool withTripod) {
 
 		AffineData affineData;
 
@@ -138,6 +138,9 @@ namespace ST {
 
 		int matching = 0;
 
+		//size_t nRANSAC = (int)(std::log(1.0 - 0.99) / std::log(1.0 - std::pow(0.6, 10)));
+		//std::cerr << "RAN: " << nRANSAC << std::endl;
+
 		for (int counter = 0; counter < kLoopCount; ++counter) {
 
 			std::array<int, 3> indexArray;
@@ -167,12 +170,22 @@ namespace ST {
 
 			cv::Mat affineMatrix = cv::getAffineTransform(src, dst);
 
+			if (withTripod) {
+				// KAOCC: this is wrong ....
+				affineMatrix.at<double>(0, 0) = 1;
+				affineMatrix.at<double>(0, 1) = 0;
+				affineMatrix.at<double>(1, 0) = 0;
+				affineMatrix.at<double>(1, 1) = 1;
+				// check above ...
+			}
+
 			double rotationRaw[4] = { 
 				affineMatrix.at<double>(0, 0), 
 				affineMatrix.at<double>(0, 1),
 				affineMatrix.at<double>(1, 0),
 				affineMatrix.at<double>(1, 1)
 			};
+
 			cv::Mat rotation(2, 2, CV_64F, rotationRaw);
 
 			double transRaw[2] = { 

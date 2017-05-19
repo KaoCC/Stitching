@@ -57,7 +57,7 @@ namespace ST {
 
 		virtual MatchPairs match(const std::vector<KeyPoint>& featuresA, const std::vector<KeyPoint>& featuresB) override;
 
-		AffineData computeAffine(const MatchPairs& matchData);
+		AffineData computeAffine(const MatchPairs& matchData, bool withTripod);
 
 	};
 
