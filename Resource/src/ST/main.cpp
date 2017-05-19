@@ -158,6 +158,9 @@ void computeDescriptor(const ST::ImageConfig& image, std::vector<ST::KeyPoint>& 
 	}
 }
 
+
+
+
 int main(int argc, char* argv[]) {
 
 	std::string basePath;
@@ -224,7 +227,7 @@ int main(int argc, char* argv[]) {
 	// Matching
 	ST::SimpleMatcher matcher;
 
-	std::vector<ST::MatchPair> matchResults;
+	std::vector<ST::MatchPairs> matchResults;
 	for (int i = 1; i < images.size(); ++i) {
 		matchResults.push_back(matcher.match(finalResults[i - 1], finalResults[i]));
 	}
@@ -235,19 +238,159 @@ int main(int argc, char* argv[]) {
 	}
 
 	//tmp;
-	std::vector<ST::KeyPoint> aa;
-	std::vector<ST::KeyPoint> bb;
 
-	for (const auto& pair : matchResults[2]) {
-		aa.push_back(*pair.first);
-		bb.push_back(*pair.second);
+	//int ai = 0; int bi = ai + 1;
+	//for (const auto& match : matchResults) {
+
+	//	std::vector<ST::KeyPoint> aa;
+	//	std::vector<ST::KeyPoint> bb;
+
+	//	for (const auto& pair : match) {
+	//		aa.push_back(*pair.first);
+	//		bb.push_back(*pair.second);
+	//	}
+
+	//	testKeyPoints(images[ai], aa, "a");
+	//	testKeyPoints(images[bi], bb, "b");
+	//	cv::waitKey(0);
+
+	//	++ai;
+	//	bi = ai + 1;
+	//}
+
+
+
+
+	std::cerr << "Comptue Affine Mat\n";
+
+	std::vector<ST::AffineData> Affines;
+
+	for (const auto& match : matchResults) {
+		Affines.push_back(matcher.computeAffine(match));
 	}
 
-	testKeyPoints(images[2], aa, "a");
-	testKeyPoints(images[3], bb, "b");
-	cv::waitKey(0);
+	std::cerr << "Affine SZ: " << Affines.size() << std::endl;
+
+	for (const auto& aff : Affines) {
+		std::cerr << "delta x: " <<aff.getDeltaX() << std::endl;
+		std::cerr << "delta y: " << aff.getDeltaY() << std::endl;
+		std::cerr << aff.getAffineMat() << std::endl;
+
+	}
+
+	// KAOCC: todo : load imag in color mode
+
+	// tmp
+	cv::Mat mappedImgA = images[0].getScaledImages(0);
 
 
+	for (int i = 0; i < images.size() - 1; ++i) {
+
+		//cv::Mat mappedImgA = images[i].getScaledImages(0);
+
+		//cv::imshow("mappedImgA", mappedImgA);
+
+		// tmp
+		cv::Mat mappedImgTmp = images[i + 1].getScaledImages(0);
+
+		//cv::imshow("mappedImgTmp", mappedImgTmp);
+		//cv::waitKey(0);
+
+		cv::Mat mappedImgB;
+
+		// Affine Transform
+		for (int counter = 0; counter <= i; ++counter) {
+
+			//std::cerr << "counter: " << counter << std::endl;
+
+			double deltaX = Affines[counter].getDeltaX();
+			double deltaY = Affines[counter].getDeltaY();
+
+			//cv::Mat mappedImgB;
+
+			cv::warpAffine(mappedImgTmp, mappedImgB, Affines[counter].getAffineMat(),
+				cv::Size(mappedImgTmp.size().width + deltaX, mappedImgTmp.size().height + deltaY),
+				CV_INTER_LINEAR + CV_WARP_FILL_OUTLIERS);
+
+			mappedImgTmp = mappedImgB;
+
+		}
+
+
+
+
+		double maxX = std::max(mappedImgA.size().width, mappedImgB.size().width);
+		double maxY = std::max(mappedImgA.size().height, mappedImgB.size().height);
+
+
+
+		//cv::imshow("mappedImgB", mappedImgB);
+		//cv::waitKey(0);
+
+		cv::Mat mergedImg(cv::Size(maxX, maxY), CV_8U);
+
+
+		//const auto& mappedImageRefA = (deltaX < 0 || deltaY < 0) ? mappedImgB : mappedImgA;
+
+		for (int p = 0; p < mappedImgA.size().height; ++p) {
+			for (int q = 0; q < mappedImgA.size().width; ++q) {
+				mergedImg.at<uchar>(p, q) = mappedImgA.at<uchar>(p, q);
+			}
+		}
+
+		for (int p = 0; p < mappedImgB.size().height; ++p) {
+			for (int q = 0; q < mappedImgB.size().width; ++q) {
+				if (mappedImgB.at<uchar>(p, q) != 0) {
+					mergedImg.at<uchar>(p, q) = mappedImgB.at<uchar>(p, q);
+				}
+			}
+		}
+
+
+		cv::imshow("mergedImg", mergedImg);
+		cv::waitKey(0);
+
+
+		double yMin = std::min(mappedImgA.size().height, mappedImgB.size().height);
+		uchar ptr_mean;
+		for (int f = 0; f < yMin; ++f) {
+			int i1;
+			int i2;
+
+			for (i1 = 0; i1 < mappedImgB.size().width; ++i1) {
+				
+				ptr_mean = mappedImgB.at<uchar>(f, i1);
+				if (ptr_mean> 5) break;
+			}
+
+			for (i2 = mappedImgA.size().width - 1; i2 >= 0; --i2) {
+				ptr_mean = mappedImgA.at<uchar>(f, i2);
+				if (ptr_mean> 5) break;
+			}
+
+			if (i1 < i2) {
+
+				for (int index = i1; index <= i2; ++index) {
+					double ratio = static_cast<double>((index - i1) / (i2 - i1 + 1));
+					mergedImg.at<uchar>(f, index) = ratio * mappedImgB.at<uchar>(f, index) + (1 - ratio) * mappedImgA.at<uchar>(f, index);
+				}
+
+			}
+
+
+		}
+
+		//cv::imshow("mergedImgNew", mergedImg);
+		//cv::waitKey(0);
+
+
+		mappedImgA = mergedImg;
+
+		
+	}
+
+
+	std::cerr << "Drift" << std::endl;
 
 
 
