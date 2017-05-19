@@ -16,7 +16,7 @@ static const double kGSigD = 1.0;
 static const double kGSigI = 1.5;
 static const double kGSigO = 4.5;
 
-static const double kLength = 20000;
+static const double kLength = 1200;
 
 namespace ST {
 
@@ -271,6 +271,134 @@ namespace ST {
 
 		cv::imshow(name, result);
 		//cv::waitKey(0);
+	}
+
+	cv::Mat stitch(const std::vector<ST::ImageConfig>& imageConfigs, const std::vector<ST::AffineData>& affines) {
+
+		// tmp
+		cv::Mat mappedImgA =  cylinderProjection(imageConfigs[0].getOriginalImage(), kLength, false);
+
+
+		for (int i = 0; i < imageConfigs.size() - 1; ++i) {
+
+			//cv::Mat mappedImgA = images[i].getScaledImages(0);
+
+			//cv::imshow("mappedImgA", mappedImgA);
+
+			// tmp
+			cv::Mat mappedImgTmp = cylinderProjection(imageConfigs[i + 1].getOriginalImage(), kLength, false);
+
+			//cv::imshow("mappedImgTmp", mappedImgTmp);
+			//cv::waitKey(0);
+
+			cv::Mat mappedImgB;
+
+			// Affine Transform
+			for (int counter = 0; counter <= i; ++counter) {
+
+				//std::cerr << "counter: " << counter << std::endl;
+
+				double deltaX = affines[counter].getDeltaX();
+				double deltaY = affines[counter].getDeltaY();
+
+				//cv::Mat mappedImgB;
+
+				cv::warpAffine(mappedImgTmp, mappedImgB, affines[counter].getAffineMat(),
+					cv::Size(mappedImgTmp.size().width + deltaX, mappedImgTmp.size().height + deltaY),
+					CV_INTER_LINEAR + CV_WARP_FILL_OUTLIERS);
+
+				mappedImgTmp = mappedImgB;
+
+			}
+
+
+
+
+			double maxX = std::max(mappedImgA.size().width, mappedImgB.size().width);
+			double maxY = std::max(mappedImgA.size().height, mappedImgB.size().height);
+
+
+
+			//cv::imshow("mappedImgB", mappedImgB);
+			//cv::waitKey(0);
+
+			cv::Mat mergedImg(cv::Size(maxX, maxY), CV_8UC3);
+
+
+			//const auto& mappedImageRefA = (deltaX < 0 || deltaY < 0) ? mappedImgB : mappedImgA;
+
+			// B
+			for (int p = 0; p < mappedImgB.size().height; ++p) {
+				for (int q = 0; q < mappedImgB.size().width; ++q) {
+					if (mappedImgB.at<cv::Vec3b>(p, q) != cv::Vec3b(0, 0, 0)) {
+						mergedImg.at<cv::Vec3b>(p, q) = mappedImgB.at<cv::Vec3b>(p, q);
+					}
+				}
+			}
+
+			//A
+			for (int p = 0; p < mappedImgA.size().height; ++p) {
+				for (int q = 0; q < mappedImgA.size().width; ++q) {
+					mergedImg.at<cv::Vec3b>(p, q) = mappedImgA.at<cv::Vec3b>(p, q);
+				}
+			}
+
+
+			//cv::imshow("mergedImg", mergedImg);
+			//cv::waitKey(0);
+
+
+			double yMin = std::min(mappedImgA.size().height, mappedImgB.size().height);
+			cv::Vec3b meanVal;
+			for (int f = 0; f < yMin; ++f) {
+				int ia = 0;
+				int ib = 0;
+
+				// find non-zero
+				for (ib = 0; ib < mappedImgB.size().width; ++ib) {
+
+					meanVal = mappedImgB.at<cv::Vec3b>(f, ib);
+
+					if (meanVal != cv::Vec3b(0, 0, 0)) {
+						//std::cerr << "ib " << ib << '\n';
+						break;
+					}
+
+				}
+
+				for (ia = mappedImgA.size().width - 1; ia >= 0; --ia) {
+					meanVal = mappedImgA.at<cv::Vec3b>(f, ia);
+
+					if (meanVal != cv::Vec3b(0, 0, 0)) {
+						//std::cerr << "ia " << ia << '\n';
+						break;
+					}
+				}
+
+				if (ib < ia) {
+
+					for (int index = ib; index <= ia; ++index) {
+						double ratio = static_cast<double>((index - ib) / (ia - ib + 1));
+
+						// (1 - alpha) * A + alpha * B
+						mergedImg.at<cv::Vec3b>(f, index) = (1 - ratio) * mappedImgA.at<cv::Vec3b>(f, index) + ratio * mappedImgB.at<cv::Vec3b>(f, index);
+					}
+
+				}
+
+
+			}
+
+			//cv::imshow("mergedImgNew", mergedImg);
+			//cv::waitKey(0);
+
+			mappedImgA = mergedImg;
+
+		}
+
+
+		return mappedImgA;
+
 	}
 
 }
